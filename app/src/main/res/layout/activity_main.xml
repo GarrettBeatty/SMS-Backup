@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/activity_main"
@@ -9,7 +9,8 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.gbeatty.smsbackupandrestorepro.MainActivity">
+    tools:context="com.gbeatty.smsbackupandrestorepro.MainActivity"
+    android:orientation="vertical">
 
     <me.zhanghai.android.materialprogressbar.MaterialProgressBar
         android:layout_width="match_parent"
@@ -18,8 +19,16 @@
         app:mpb_progressTint="@color/accent"
         android:progress="30"
         app:mpb_progressStyle="horizontal"
-        android:id="@+id/progressBar2"
+        android:id="@+id/progress"
         style="@style/Widget.MaterialProgressBar.ProgressBar.Horizontal" />
+
+
+    <TextView
+        android:text="80/100 tects backed up"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/progress_info"
+        android:layout_marginTop="8dp" />
 
     <Button
         android:text="Backup"
@@ -28,10 +37,8 @@
         android:background="@color/primary"
         android:textColor="#FFFFFF"
         android:layout_height="wrap_content"
-        android:id="@+id/button2"
-        android:layout_below="@+id/progressBar2"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:id="@+id/backupButton"
+        android:onClick="backup" />
 
     <Button
         android:text="Restore"
@@ -39,10 +46,28 @@
         android:background="@color/primary"
         android:textColor="#FFFFFF"
         android:layout_height="wrap_content"
-        android:id="@+id/button"
-        android:layout_below="@+id/button2"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="16dp" />
+        android:id="@+id/restoreButton"
+        android:layout_marginTop="16dp"
+        android:onClick="restore"/>
 
-</RelativeLayout>
+    <Button
+        android:text="Backup Settings"
+        android:layout_width="match_parent"
+        android:background="@color/primary"
+        android:textColor="#FFFFFF"
+        android:layout_height="wrap_content"
+        android:id="@+id/backupSettingsButton"
+        android:layout_marginTop="16dp"
+        android:onClick="backupSettings"/>
+
+    <Button
+        android:text="Restore Settings"
+        android:layout_width="match_parent"
+        android:background="@color/primary"
+        android:textColor="#FFFFFF"
+        android:layout_height="wrap_content"
+        android:id="@+id/restoreSettingsButton"
+        android:layout_marginTop="16dp"
+        android:onClick="restoreSettings"/>
+
+</LinearLayout>
