@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -10,16 +11,38 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.gbeatty.smsbackupandrestorepro.MainActivity">
 
+    <me.zhanghai.android.materialprogressbar.MaterialProgressBar
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="false"
+        app:mpb_progressTint="@color/accent"
+        android:progress="30"
+        app:mpb_progressStyle="horizontal"
+        android:id="@+id/progressBar2"
+        style="@style/Widget.MaterialProgressBar.ProgressBar.Horizontal" />
+
     <Button
         android:text="Backup"
+        android:layout_marginTop="16dp"
         android:layout_width="match_parent"
-        android:background="@color/primary_dark"
-        android:textColor="@color/primary_light"
+        android:background="@color/primary"
+        android:textColor="#FFFFFF"
+        android:layout_height="wrap_content"
+        android:id="@+id/button2"
+        android:layout_below="@+id/progressBar2"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:text="Restore"
+        android:layout_width="match_parent"
+        android:background="@color/primary"
+        android:textColor="#FFFFFF"
         android:layout_height="wrap_content"
         android:id="@+id/button"
-        android:layout_alignParentTop="true"
+        android:layout_below="@+id/button2"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_marginTop="97dp" />
+        android:layout_marginTop="16dp" />
 
 </RelativeLayout>
