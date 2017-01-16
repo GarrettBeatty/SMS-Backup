@@ -5,7 +5,7 @@
 
         <Preference
             android:title="Backup Account"
-            android:summary="test@gmail.com"
+            android:summary="No account selected"
             android:key="backup_account">
         </Preference>
 

@@ -1,23 +1,16 @@
 package com.gbeatty.smsbackupandrestorepro;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.Build;
+import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.app.LoaderManager;
-import android.content.Loader;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.util.Log;
 import android.widget.TextView;
 
 import com.gbeatty.smsbackupandrestorepro.presenters.MainPresenter;
@@ -27,6 +20,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import me.zhanghai.android.materialprogressbar.MaterialProgressBar;
+import pub.devrel.easypermissions.EasyPermissions;
 
 public class MainActivity extends AppCompatActivity implements MainView {
 
@@ -36,7 +30,7 @@ public class MainActivity extends AppCompatActivity implements MainView {
     @BindView(R.id.progress)
     MaterialProgressBar progressBar;
     private BroadcastReceiver receiver;
-
+    final int REQUEST_CODE_ASK_PERMISSIONS = 123;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,12 +74,11 @@ public class MainActivity extends AppCompatActivity implements MainView {
 
     public void getAllSms() {
 
-        if(ContextCompat.checkSelfPermission(getBaseContext(), "android.permission.READ_SMS") == PackageManager.PERMISSION_GRANTED) {
+        if(EasyPermissions.hasPermissions(this, Manifest.permission.READ_SMS)){
             Intent serviceIntent = new Intent(this, BackupService.class);
             startService(serviceIntent);
         }else{
-            final int REQUEST_CODE_ASK_PERMISSIONS = 123;
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.READ_SMS"}, REQUEST_CODE_ASK_PERMISSIONS);
+            EasyPermissions.requestPermissions(this, "This app needs to access your SMS for backup.", REQUEST_CODE_ASK_PERMISSIONS, Manifest.permission.READ_SMS);
         }
     }
 
