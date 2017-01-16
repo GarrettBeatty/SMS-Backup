@@ -8,5 +8,5 @@ public interface MainView {
 
 
     void showSettings();
-    List<Sms> getAllSms();
+    void getAllSms();
 }

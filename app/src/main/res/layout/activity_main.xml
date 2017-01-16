@@ -17,7 +17,6 @@
         android:layout_height="wrap_content"
         android:indeterminate="false"
         app:mpb_progressTint="@color/accent"
-        android:progress="30"
         app:mpb_progressStyle="horizontal"
         android:id="@+id/progress"
         style="@style/Widget.MaterialProgressBar.ProgressBar.Horizontal" />
