@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.gbeatty.smsbackupandrestorepro">
 
-    <uses-permission android:name="android.permission.READ_SMS"/>
+    <uses-permission android:name="android.permission.READ_SMS" />
 
     <application
         android:allowBackup="true"
@@ -20,6 +20,11 @@
         <activity
             android:name=".PreferenceActivity"
             android:label="Settings" />
+
+        <service
+            android:name=".BackupService"
+            android:enabled="true"
+            android:exported="true"></service>
     </application>
 
 </manifest>

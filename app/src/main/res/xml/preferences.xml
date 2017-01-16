@@ -9,12 +9,12 @@
             android:key="backup_account">
         </Preference>
 
-        <com.afollestad.materialdialogs.prefs.MaterialListPreference
-            android:entries="@array/interval_values"
-            android:entryValues="@array/interval_values"
+        <com.afollestad.materialdialogs.prefs.MaterialEditTextPreference
+            android:defaultValue="1"
+            android:dialogTitle="Backup Interval"
+            android:inputType="number"
             android:key="backup_interval"
             android:persistent="true"
-            android:defaultValue="0"
             android:summary="Every 1 hours"
             android:title="Backup Interval" />
 
