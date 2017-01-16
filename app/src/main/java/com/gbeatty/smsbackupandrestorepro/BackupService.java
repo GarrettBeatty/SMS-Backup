@@ -7,6 +7,8 @@ import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.IBinder;
+import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.gbeatty.smsbackupandrestorepro.models.Sms;
@@ -14,10 +16,15 @@ import com.gbeatty.smsbackupandrestorepro.models.Sms;
 public class BackupService extends Service implements Loader.OnLoadCompleteListener<Cursor> {
 
     private static final int LOADER_ID = 1;
+    public static final String BACKUP_RESULT = "com.gbeatty.smsbackupandrestorepro.BackupService.REQUEST_PROCESSED";
     private Uri uri = Uri.parse("content://sms/");
+    public static final String BACKUP_DATA = "com.gbeatty.smsbackupandrestorepro.BackupService.BACKUP_DATA";
+
     private String[] projection = {
             "_id","address","read","body","date","type"
     };
+
+    private LocalBroadcastManager broadcaster;
     private CursorLoader mCursorLoader;
 
     public BackupService() {
@@ -31,6 +38,7 @@ public class BackupService extends Service implements Loader.OnLoadCompleteListe
 
     @Override
     public void onCreate() {
+        broadcaster = LocalBroadcastManager.getInstance(this);
         mCursorLoader = new CursorLoader(this, uri, projection, null,null,null);
         mCursorLoader.registerListener(LOADER_ID, this);
         mCursorLoader.startLoading();
@@ -38,7 +46,6 @@ public class BackupService extends Service implements Loader.OnLoadCompleteListe
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -57,6 +64,7 @@ public class BackupService extends Service implements Loader.OnLoadCompleteListe
     @Override
     public void onLoadComplete(Loader<Cursor> loader, Cursor c) {
         if(c != null && c.getCount() > 0){
+            Intent intent = new Intent(BACKUP_RESULT);
             c.moveToFirst();
             int totalSMS = c.getCount();
             int count = 0;
@@ -75,9 +83,8 @@ public class BackupService extends Service implements Loader.OnLoadCompleteListe
                     objSms.setFolderName("sent");
                 }
                 count++;
-                double percent = (100 * count) / totalSMS;
-//                progressBar.setProgress((int) percent);
-//                progressInfo.setText(res.getString(R.string.progress_info, count, totalSMS));
+                intent.putExtra(BACKUP_DATA, new int[]{count, totalSMS});
+                broadcaster.sendBroadcast(intent);
                 c.moveToNext();
             }
         }
