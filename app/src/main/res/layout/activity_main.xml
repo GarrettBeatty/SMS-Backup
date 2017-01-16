@@ -24,7 +24,6 @@
 
 
     <TextView
-        android:text="80/100 tects backed up"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/progress_info"
@@ -37,8 +36,7 @@
         android:background="@color/primary"
         android:textColor="#FFFFFF"
         android:layout_height="wrap_content"
-        android:id="@+id/backupButton"
-        android:onClick="backup" />
+        android:id="@+id/backupButton" />
 
     <Button
         android:text="Restore"
@@ -48,26 +46,16 @@
         android:layout_height="wrap_content"
         android:id="@+id/restoreButton"
         android:layout_marginTop="16dp"
-        android:onClick="restore"/>
+        />
 
     <Button
-        android:text="Backup Settings"
+        android:text="Settings"
         android:layout_width="match_parent"
         android:background="@color/primary"
         android:textColor="#FFFFFF"
         android:layout_height="wrap_content"
-        android:id="@+id/backupSettingsButton"
+        android:id="@+id/settingsButton"
         android:layout_marginTop="16dp"
-        android:onClick="backupSettings"/>
-
-    <Button
-        android:text="Restore Settings"
-        android:layout_width="match_parent"
-        android:background="@color/primary"
-        android:textColor="#FFFFFF"
-        android:layout_height="wrap_content"
-        android:id="@+id/restoreSettingsButton"
-        android:layout_marginTop="16dp"
-        android:onClick="restoreSettings"/>
+        />
 
 </LinearLayout>

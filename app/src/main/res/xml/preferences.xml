@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="Backup">
+
+        <Preference
+            android:title="Backup Account"
+            android:summary="test@gmail.com"
+            android:key="backup_account">
+        </Preference>
+
+        <Preference
+            android:title="Backup Frequency"
+            android:summary="Every 1 hours"
+            android:key="backup_frequency">
+        </Preference>
+
+        <Preference
+            android:title="Gmail Label"
+            android:summary="sms"
+            android:key="gmail_label">
+        </Preference>
+
+        <CheckBoxPreference
+            android:title="Auto Backup"
+            android:key="auto_backup">
+        </CheckBoxPreference>
+
+        <CheckBoxPreference
+            android:title="Notifications"
+            android:key="notifications">
+        </CheckBoxPreference>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Restore">
+
+        <Preference
+            android:title="Number of Messages to Restore"
+            android:summary="All"
+            android:key="restore_amount">
+        </Preference>
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">SMS Backup and Restore Pro</string>
+    <string name="progress_info">%1$d out of %2$d sms backed up</string>
 </resources>

@@ -1,5 +1,8 @@
 package com.gbeatty.smsbackupandrestorepro.presenters;
 
+import android.database.Cursor;
+import android.net.Uri;
+
 import com.gbeatty.smsbackupandrestorepro.views.MainView;
 
 public class MainPresenter {
@@ -11,18 +14,16 @@ public class MainPresenter {
     }
 
     public void backup() {
-
+        view.getAllSms();
     }
 
     public void restore(){
 
     }
 
-    public void backupSettings() {
 
+    public void settings() {
+        view.showSettings();
     }
 
-    public void restoreSettings() {
-
-    }
 }
