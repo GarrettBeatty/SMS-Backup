@@ -9,25 +9,33 @@
             android:key="backup_account">
         </Preference>
 
-        <Preference
-            android:title="Backup Frequency"
+        <com.afollestad.materialdialogs.prefs.MaterialListPreference
+            android:entries="@array/interval_values"
+            android:entryValues="@array/interval_values"
+            android:key="backup_interval"
+            android:persistent="true"
+            android:defaultValue="0"
             android:summary="Every 1 hours"
-            android:key="backup_frequency">
-        </Preference>
+            android:title="Backup Interval" />
 
-        <Preference
-            android:title="Gmail Label"
+        <com.afollestad.materialdialogs.prefs.MaterialEditTextPreference
+            android:defaultValue="sms"
+            android:dialogTitle="Gmail Label"
+            android:inputType="textPersonName"
+            android:key="gmail_label"
+            android:persistent="true"
             android:summary="sms"
-            android:key="gmail_label">
-        </Preference>
+            android:title="Gmail Label" />
 
         <CheckBoxPreference
             android:title="Auto Backup"
+            android:defaultValue="true"
             android:key="auto_backup">
         </CheckBoxPreference>
 
         <CheckBoxPreference
             android:title="Notifications"
+            android:defaultValue="false"
             android:key="notifications">
         </CheckBoxPreference>
 
@@ -35,12 +43,14 @@
 
     <PreferenceCategory android:title="Restore">
 
-        <Preference
-            android:title="Number of Messages to Restore"
-            android:summary="All"
-            android:key="restore_amount">
-        </Preference>
-
+        <com.afollestad.materialdialogs.prefs.MaterialListPreference
+            android:entries="@array/restore_values"
+            android:entryValues="@array/restore_values"
+            android:key="restore_limit"
+            android:persistent="true"
+            android:defaultValue="0"
+            android:summary="Number of most recent SMS to restore"
+            android:title="Restore Limit" />
     </PreferenceCategory>
 
 </PreferenceScreen>

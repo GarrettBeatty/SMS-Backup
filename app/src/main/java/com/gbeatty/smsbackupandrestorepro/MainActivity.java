@@ -65,10 +65,7 @@ public class MainActivity extends AppCompatActivity implements MainView, LoaderM
 
     @Override
     public void showSettings() {
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.GINGERBREAD_MR1)
-            startActivity(new Intent(getApplicationContext(), PreferenceActivity.class));
-        else
-            startActivity(new Intent(getApplicationContext(), PreferenceActivityCompat.class));
+        startActivity(new Intent(getApplicationContext(), PreferenceActivity.class));
     }
 
     public void getAllSms() {
