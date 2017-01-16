@@ -39,8 +39,6 @@ public class MainActivity extends AppCompatActivity implements MainView, LoaderM
             "_id","address","read","body","date","type"
     };
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -81,7 +79,6 @@ public class MainActivity extends AppCompatActivity implements MainView, LoaderM
             final int REQUEST_CODE_ASK_PERMISSIONS = 123;
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{"android.permission.READ_SMS"}, REQUEST_CODE_ASK_PERMISSIONS);
         }
-
     }
 
     @Override

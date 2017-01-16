@@ -12,6 +12,12 @@
     tools:context="com.gbeatty.smsbackupandrestorepro.MainActivity"
     android:orientation="vertical">
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/progress_info"
+        android:text="@string/progress_info_blank" />
+
     <me.zhanghai.android.materialprogressbar.MaterialProgressBar
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -22,20 +28,14 @@
         style="@style/Widget.MaterialProgressBar.ProgressBar.Horizontal" />
 
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/progress_info"
-        android:layout_marginTop="8dp" />
-
     <Button
         android:text="Backup"
-        android:layout_marginTop="16dp"
         android:layout_width="match_parent"
         android:background="@color/primary"
         android:textColor="#FFFFFF"
         android:layout_height="wrap_content"
-        android:id="@+id/backupButton" />
+        android:id="@+id/backupButton"
+        android:layout_marginTop="16dp" />
 
     <Button
         android:text="Restore"
