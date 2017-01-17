@@ -8,11 +8,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.preference.Preference;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 
 import com.afollestad.materialdialogs.MaterialDialog;
@@ -25,12 +24,9 @@ import com.google.api.services.gmail.GmailScopes;
 import java.util.Arrays;
 import java.util.List;
 
-import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
 
-import static com.gbeatty.smsbackupandrestorepro.BaseActivity.REQUEST_PERMISSION_MULTIPLE;
-
-public abstract class BaseActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks{
+public abstract class BaseActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
 
     static final int REQUEST_ACCOUNT_PICKER = 1000;
     static final int REQUEST_AUTHORIZATION = 1001;
@@ -38,7 +34,7 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
     static final int REQUEST_PERMISSION_MULTIPLE = 1004;
 
     static final String PREF_ACCOUNT_NAME = "accountName";
-    static final String[] SCOPES = { GmailScopes.GMAIL_LABELS, GmailScopes.GMAIL_MODIFY };
+    static final String[] SCOPES = {GmailScopes.GMAIL_LABELS, GmailScopes.GMAIL_MODIFY};
     GoogleAccountCredential mCredential;
 
     @Override
@@ -54,7 +50,7 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
         SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
         String account = settings.getString(PREF_ACCOUNT_NAME, null);
 
-        if(account != null){
+        if (account != null) {
             mCredential.setSelectedAccountName(account);
         }
     }
@@ -67,9 +63,9 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
      * appropriate.
      */
     public void getGoogleAccount(boolean settings) {
-        if (! isGooglePlayServicesAvailable()) {
+        if (!isGooglePlayServicesAvailable()) {
             acquireGooglePlayServices();
-        }else if (! isDeviceOnline()) {
+        } else if (!isDeviceOnline()) {
             new MaterialDialog.Builder(this)
                     .title("No Internet Connection Available")
                     .content("Please connect to the internet.")
@@ -82,21 +78,20 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
 
 
     public void chooseAccount(boolean settings) {
-        Log.d("TESTING","TESTING");
         if (EasyPermissions.hasPermissions(this, Manifest.permission.GET_ACCOUNTS, Manifest.permission.READ_SMS)) {
             // Start a dialog from which the user can choose an account
             String accountName = PreferenceManager.getDefaultSharedPreferences(this)
                     .getString(PREF_ACCOUNT_NAME, null);
             if (accountName != null) {
                 mCredential.setSelectedAccountName(accountName);
-            }else{
+            } else {
                 settings = false;
                 // Start a dialog from which the user can choose an account
                 startActivityForResult(
                         mCredential.newChooseAccountIntent(),
                         REQUEST_ACCOUNT_PICKER);
             }
-            if(settings){
+            if (settings) {
                 // Start a dialog from which the user can choose an account
                 startActivityForResult(
                         mCredential.newChooseAccountIntent(),
@@ -104,7 +99,7 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
             }
 
         } else {
-            EasyPermissions.requestPermissions(this, "This app needs permission to view SMS and get your Google Account info", REQUEST_PERMISSION_MULTIPLE,Manifest.permission.GET_ACCOUNTS, Manifest.permission.READ_SMS);
+            EasyPermissions.requestPermissions(this, "This app needs permission to view SMS and get your Google Account info", REQUEST_PERMISSION_MULTIPLE, Manifest.permission.GET_ACCOUNTS, Manifest.permission.READ_SMS);
         }
 
     }
@@ -112,9 +107,10 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
     /**
      * Callback for when a permission is denied using the EasyPermissions
      * library.
+     *
      * @param requestCode The request code associated with the requested
-     *         permission
-     * @param list The requested permission list. Never null.
+     *                    permission
+     * @param list        The requested permission list. Never null.
      */
     @Override
     public void onPermissionsDenied(int requestCode, List<String> list) {
@@ -123,6 +119,7 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
 
     /**
      * Checks whether the device currently has a network connection.
+     *
      * @return true if the device has a network connection, false otherwise.
      */
     private boolean isDeviceOnline() {
@@ -134,8 +131,9 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
 
     /**
      * Check that Google Play services APK is installed and up to date.
+     *
      * @return true if Google Play Services is available and up to
-     *     date on this device; false otherwise.
+     * date on this device; false otherwise.
      */
     private boolean isGooglePlayServicesAvailable() {
         GoogleApiAvailability apiAvailability =
@@ -163,8 +161,9 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
     /**
      * Display an error dialog showing that Google Play Services is missing
      * or out of date.
+     *
      * @param connectionStatusCode code describing the presence (or lack of)
-     *     Google Play Services on this device.
+     *                             Google Play Services on this device.
      */
     void showGooglePlayServicesAvailabilityErrorDialog(
             final int connectionStatusCode) {
@@ -182,19 +181,23 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
      * Called when an activity launched here (specifically, AccountPicker
      * and authorization) exits, giving you the requestCode you started it with,
      * the resultCode it returned, and any additional data from it.
+     *
      * @param requestCode code indicating which activity result is incoming.
-     * @param resultCode code indicating the result of the incoming
-     *     activity result.
-     * @param data Intent (containing result data) returned by incoming
-     *     activity result.
+     * @param resultCode  code indicating the result of the incoming
+     *                    activity result.
+     * @param data        Intent (containing result data) returned by incoming
+     *                    activity result.
      */
     @Override
     protected void onActivityResult(
             int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        switch(requestCode) {
+        switch (requestCode) {
             case REQUEST_GOOGLE_PLAY_SERVICES:
                 if (resultCode != RESULT_OK) {
+                    //TODO Handle
+                }else{
+                    getGoogleAccount(false);
                 }
                 break;
             case REQUEST_ACCOUNT_PICKER:
@@ -212,20 +215,17 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
                     }
                 }
                 break;
-            case REQUEST_AUTHORIZATION:
-                if (resultCode == RESULT_OK) {
-                }
-                break;
         }
     }
 
     /**
      * Respond to requests for permissions at runtime for API 23 and above.
-     * @param requestCode The request code passed in
-     *     requestPermissions(android.app.Activity, String, int, String[])
-     * @param permissions The requested permissions. Never null.
+     *
+     * @param requestCode  The request code passed in
+     *                     requestPermissions(android.app.Activity, String, int, String[])
+     * @param permissions  The requested permissions. Never null.
      * @param grantResults The grant results for the corresponding permissions
-     *     which is either PERMISSION_GRANTED or PERMISSION_DENIED. Never null.
+     *                     which is either PERMISSION_GRANTED or PERMISSION_DENIED. Never null.
      */
     @Override
     public void onRequestPermissionsResult(int requestCode,
@@ -237,17 +237,17 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
     }
 
 
-
     /**
      * Callback for when a permission is granted using the EasyPermissions
      * library.
+     *
      * @param requestCode The request code associated with the requested
-     *         permission
-     * @param list The requested permission list. Never null.
+     *                    permission
+     * @param list        The requested permission list. Never null.
      */
     @Override
     public void onPermissionsGranted(int requestCode, List<String> list) {
-        switch (requestCode){
+        switch (requestCode) {
             case REQUEST_PERMISSION_MULTIPLE:
                 chooseAccount(false);
                 break;

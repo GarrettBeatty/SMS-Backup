@@ -4,10 +4,9 @@
     <PreferenceCategory android:title="Backup">
 
         <Preference
-            android:title="Backup Account"
+            android:key="backup_account"
             android:summary="No account selected"
-            android:key="backup_account">
-        </Preference>
+            android:title="Backup Account"></Preference>
 
         <com.afollestad.materialdialogs.prefs.MaterialEditTextPreference
             android:defaultValue="1"
@@ -28,27 +27,25 @@
             android:title="Gmail Label" />
 
         <CheckBoxPreference
-            android:title="Auto Backup"
             android:defaultValue="true"
-            android:key="auto_backup">
-        </CheckBoxPreference>
+            android:key="auto_backup"
+            android:title="Auto Backup"></CheckBoxPreference>
 
         <CheckBoxPreference
-            android:title="Notifications"
             android:defaultValue="false"
-            android:key="notifications">
-        </CheckBoxPreference>
+            android:key="notifications"
+            android:title="Notifications"></CheckBoxPreference>
 
     </PreferenceCategory>
 
     <PreferenceCategory android:title="Restore">
 
         <com.afollestad.materialdialogs.prefs.MaterialListPreference
+            android:defaultValue="0"
             android:entries="@array/restore_values"
             android:entryValues="@array/restore_values"
             android:key="restore_limit"
             android:persistent="true"
-            android:defaultValue="0"
             android:summary="Number of most recent SMS to restore"
             android:title="Restore Limit" />
     </PreferenceCategory>

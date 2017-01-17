@@ -13,7 +13,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import me.zhanghai.android.materialprogressbar.MaterialProgressBar;
 
-public class MainActivity extends BaseActivity{
+public class MainActivity extends BaseActivity {
 
 
     @BindView(R.id.progress_info)
@@ -47,29 +47,28 @@ public class MainActivity extends BaseActivity{
     }
 
     @OnClick(R.id.backupButton)
-    public void backup(){
+    public void backup() {
         getAllSms();
     }
 
     @OnClick(R.id.restoreButton)
-    public void restore(){
+    public void restore() {
 
     }
 
     @OnClick(R.id.settingsButton)
-    public void settings(){
+    public void settings() {
         startActivity(new Intent(this, PreferenceActivity.class));
     }
 
-
     public void getAllSms() {
 
-            if(mCredential.getSelectedAccountName() == null){
-                getGoogleAccount(false);
-            }else{
-                Intent serviceIntent = new Intent(this, BackupService.class);
-                startService(serviceIntent);
-            }
+        if (mCredential.getSelectedAccountName() == null) {
+            getGoogleAccount(false);
+        } else {
+            Intent serviceIntent = new Intent(this, BackupService.class);
+            startService(serviceIntent);
+        }
     }
 
     @Override

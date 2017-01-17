@@ -10,13 +10,12 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.view.MenuItem;
 
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
-import com.google.api.client.util.ExponentialBackOff;
-
-import java.util.Arrays;
+interface OnCompleteListener {
+    void onComplete();
+}
 
 @SuppressLint("NewApi")
-public class PreferenceActivity extends BaseActivity implements  OnCompleteListener{
+public class PreferenceActivity extends BaseActivity implements OnCompleteListener {
 
     SettingsFragment settingsFragment;
 
@@ -39,42 +38,11 @@ public class PreferenceActivity extends BaseActivity implements  OnCompleteListe
         Preference account = settingsFragment.findPreference("backup_account");
         SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
 
-        if(account != null){
+        if (account != null) {
             String accountName = settings.getString(PREF_ACCOUNT_NAME, "No account selected");
             account.setSummary(accountName);
         }
 
-    }
-
-    public static class SettingsFragment extends PreferenceFragment {
-
-        private OnCompleteListener mListener;
-
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.preferences);
-            mListener.onComplete();
-        }
-
-        @Override
-        public void onAttach(Context context) {
-            super.onAttach(context);
-
-            Activity a = null;
-
-            if (context instanceof Activity){
-                a=(Activity) context;
-            }
-
-            try {
-                this.mListener = (OnCompleteListener)a;
-            }
-            catch (final ClassCastException e) {
-                throw new ClassCastException(a.toString() + " must implement OnCompleteListener");
-            }
-
-        }
     }
 
     @Override
@@ -103,9 +71,34 @@ public class PreferenceActivity extends BaseActivity implements  OnCompleteListe
         }
         return super.onOptionsItemSelected(item);
     }
-}
 
+    public static class SettingsFragment extends PreferenceFragment {
 
-interface OnCompleteListener {
-    void onComplete();
+        private OnCompleteListener mListener;
+
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.preferences);
+            mListener.onComplete();
+        }
+
+        @Override
+        public void onAttach(Context context) {
+            super.onAttach(context);
+
+            Activity a = null;
+
+            if (context instanceof Activity) {
+                a = (Activity) context;
+            }
+
+            try {
+                this.mListener = (OnCompleteListener) a;
+            } catch (final ClassCastException e) {
+                throw new ClassCastException(a.toString() + " must implement OnCompleteListener");
+            }
+
+        }
+    }
 }

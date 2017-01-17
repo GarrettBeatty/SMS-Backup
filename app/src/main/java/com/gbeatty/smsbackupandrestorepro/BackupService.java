@@ -1,7 +1,6 @@
 package com.gbeatty.smsbackupandrestorepro;
 
 import android.app.Service;
-import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
@@ -11,25 +10,17 @@ import android.net.Uri;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 
 import com.gbeatty.smsbackupandrestorepro.models.Sms;
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
-import com.google.api.client.util.ExponentialBackOff;
-import com.google.api.services.gmail.GmailScopes;
-
-import java.util.Arrays;
-
-import static com.gbeatty.smsbackupandrestorepro.BaseActivity.PREF_ACCOUNT_NAME;
 
 public class BackupService extends Service implements Loader.OnLoadCompleteListener<Cursor> {
 
-    private static final int LOADER_ID = 1;
     public static final String BACKUP_RESULT = "com.gbeatty.smsbackupandrestorepro.BackupService.REQUEST_PROCESSED";
-    private Uri uri = Uri.parse("content://sms/");
     public static final String BACKUP_DATA = "com.gbeatty.smsbackupandrestorepro.BackupService.BACKUP_DATA";
+    private static final int LOADER_ID = 1;
+    private Uri uri = Uri.parse("content://sms/");
     private String[] projection = {
-            "_id","address","read","body","date","type"
+            "_id", "address", "read", "body", "date", "type"
     };
     private LocalBroadcastManager broadcaster;
     private CursorLoader mCursorLoader;
@@ -40,13 +31,15 @@ public class BackupService extends Service implements Loader.OnLoadCompleteListe
 
     @Override
     public IBinder onBind(Intent intent) {
+
         return null;
     }
 
     @Override
     public void onCreate() {
+
         broadcaster = LocalBroadcastManager.getInstance(this);
-        mCursorLoader = new CursorLoader(this, uri, projection, null,null,null);
+        mCursorLoader = new CursorLoader(this, uri, projection, null, null, null);
         mCursorLoader.registerListener(LOADER_ID, this);
         mCursorLoader.startLoading();
     }
@@ -70,7 +63,7 @@ public class BackupService extends Service implements Loader.OnLoadCompleteListe
 
     @Override
     public void onLoadComplete(Loader<Cursor> loader, Cursor c) {
-        if(c != null && c.getCount() > 0){
+        if (c != null && c.getCount() > 0) {
             Intent intent = new Intent(BACKUP_RESULT);
             c.moveToFirst();
             int totalSMS = c.getCount();
