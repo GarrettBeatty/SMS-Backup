@@ -1,36 +1,26 @@
 package com.gbeatty.smsbackupandrestorepro;
 
-import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
-
-import com.gbeatty.smsbackupandrestorepro.presenters.MainPresenter;
-import com.gbeatty.smsbackupandrestorepro.views.MainView;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import me.zhanghai.android.materialprogressbar.MaterialProgressBar;
-import pub.devrel.easypermissions.EasyPermissions;
 
-public class MainActivity extends AppCompatActivity implements MainView {
+public class MainActivity extends BaseActivity{
 
-    private MainPresenter presenter;
+
     @BindView(R.id.progress_info)
     TextView progressInfo;
     @BindView(R.id.progress)
     MaterialProgressBar progressBar;
     private BroadcastReceiver receiver;
-    final int REQUEST_CODE_ASK_PERMISSIONS = 123;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,38 +38,38 @@ public class MainActivity extends AppCompatActivity implements MainView {
                 progressInfo.setText(getResources().getString(R.string.progress_info, count, totalSMS));
             }
         };
-        presenter = new MainPresenter(this);
         ButterKnife.bind(this);
+    }
+
+    @Override
+    public void signInResult() {
+        getAllSms();
     }
 
     @OnClick(R.id.backupButton)
     public void backup(){
-        presenter.backup();
+        getAllSms();
     }
 
     @OnClick(R.id.restoreButton)
     public void restore(){
-        presenter.restore();
+
     }
 
     @OnClick(R.id.settingsButton)
     public void settings(){
-        presenter.settings();
+        startActivity(new Intent(this, PreferenceActivity.class));
     }
 
-    @Override
-    public void showSettings() {
-        startActivity(new Intent(getApplicationContext(), PreferenceActivity.class));
-    }
 
     public void getAllSms() {
 
-        if(EasyPermissions.hasPermissions(this, Manifest.permission.READ_SMS)){
-            Intent serviceIntent = new Intent(this, BackupService.class);
-            startService(serviceIntent);
-        }else{
-            EasyPermissions.requestPermissions(this, "This app needs to access your SMS for backup.", REQUEST_CODE_ASK_PERMISSIONS, Manifest.permission.READ_SMS);
-        }
+            if(mCredential.getSelectedAccountName() == null){
+                getGoogleAccount(false);
+            }else{
+                Intent serviceIntent = new Intent(this, BackupService.class);
+                startService(serviceIntent);
+            }
     }
 
     @Override

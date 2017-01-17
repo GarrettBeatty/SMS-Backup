@@ -1,15 +1,26 @@
 package com.gbeatty.smsbackupandrestorepro;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import com.gbeatty.smsbackupandrestorepro.models.Sms;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.util.ExponentialBackOff;
+import com.google.api.services.gmail.GmailScopes;
+
+import java.util.Arrays;
+
+import static com.gbeatty.smsbackupandrestorepro.BaseActivity.PREF_ACCOUNT_NAME;
 
 public class BackupService extends Service implements Loader.OnLoadCompleteListener<Cursor> {
 
@@ -17,11 +28,9 @@ public class BackupService extends Service implements Loader.OnLoadCompleteListe
     public static final String BACKUP_RESULT = "com.gbeatty.smsbackupandrestorepro.BackupService.REQUEST_PROCESSED";
     private Uri uri = Uri.parse("content://sms/");
     public static final String BACKUP_DATA = "com.gbeatty.smsbackupandrestorepro.BackupService.BACKUP_DATA";
-
     private String[] projection = {
             "_id","address","read","body","date","type"
     };
-
     private LocalBroadcastManager broadcaster;
     private CursorLoader mCursorLoader;
 
