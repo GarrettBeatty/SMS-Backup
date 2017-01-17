@@ -24,12 +24,11 @@
             android:name=".PreferenceActivity"
             android:label="Settings" />
 
+        <activity android:name=".BaseActivity" />
+
         <service
             android:name=".BackupService"
-            android:enabled="true"
-            android:exported="true" />
-
-        <activity android:name=".BaseActivity"></activity>
+            android:exported="false"></service>
     </application>
 
 </manifest>
