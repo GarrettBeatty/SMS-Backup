@@ -1,17 +1,10 @@
 package com.gbeatty.smsbackupandrestorepro;
 
-import android.accounts.AccountManager;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.content.LocalBroadcastManager;
-import android.text.TextUtils;
-import android.util.Log;
 import android.widget.TextView;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
@@ -22,13 +15,9 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ExponentialBackOff;
-import com.google.api.services.gmail.model.Label;
-import com.google.api.services.gmail.model.ListLabelsResponse;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -88,7 +77,7 @@ public class MainActivity extends BaseActivity {
         SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
         String account = settings.getString(PREF_ACCOUNT_NAME, null);
         credential.setSelectedAccountName(account);
-        new testOAuth(credential).execute();
+        new TestOAuth(credential).execute();
 
     }
 
@@ -102,15 +91,13 @@ public class MainActivity extends BaseActivity {
         super.onStop();
     }
 
-    /**
-     * An asynchronous task that handles the Gmail API call.
-     * Placing the API calls in their own task ensures the UI stays responsive.
-     */
-    private class testOAuth extends AsyncTask<Void, Void, Integer> {
+
+    //really dirty way of prompting oauth screen
+    private class TestOAuth extends AsyncTask<Void, Void, Void> {
         private com.google.api.services.gmail.Gmail mService = null;
         private Exception mLastError = null;
 
-        testOAuth(GoogleAccountCredential credential) {
+        TestOAuth(GoogleAccountCredential credential) {
             HttpTransport transport = AndroidHttp.newCompatibleTransport();
             JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
             mService = new com.google.api.services.gmail.Gmail.Builder(
@@ -119,25 +106,18 @@ public class MainActivity extends BaseActivity {
                     .build();
         }
 
-        /**
-         * Background task to call Gmail API.
-         * @param params no parameters needed for this task.
-         */
         @Override
-        protected Integer doInBackground(Void... params) {
+        protected Void doInBackground(Void... params) {
             try {
                 getDataFromApi();
-                return 1;
             } catch (Exception e) {
                 mLastError = e;
                 cancel(true);
-                return 0;
             }
+            return null;
+
         }
 
-        /**
-         * @throws IOException
-         */
         private void getDataFromApi() throws IOException {
             // Get the labels in the user's account.
             String user = "me";
@@ -159,6 +139,7 @@ public class MainActivity extends BaseActivity {
                             MainActivity.REQUEST_AUTHORIZATION);
                 }
                 else{
+                    //user is authenticated start the service
                     Intent serviceIntent = new Intent(getApplicationContext(), BackupService.class);
                     startService(serviceIntent);
                 }
