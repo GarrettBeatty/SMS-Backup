@@ -9,6 +9,8 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
+import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
@@ -19,14 +21,19 @@ import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.gmail.model.Thread;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import static android.R.id.message;
+import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_MESSAGE;
+import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_RESULT;
 import static com.gbeatty.smsbackupandrestorepro.Utils.PREF_ACCOUNT_NAME;
 import static com.gbeatty.smsbackupandrestorepro.Utils.SCOPES;
 import static com.gbeatty.smsbackupandrestorepro.Utils.createEmail;
@@ -37,8 +44,7 @@ import static com.gbeatty.smsbackupandrestorepro.Utils.insertMessage;
 public class BackupService extends IntentService  {
 
     private Uri uri = Uri.parse("content://sms/");
-    private String[] projection = {
-            "_id", "address", "read", "body", "date", "type"
+    private String[] projection = {"address", "read", "body", "date", "type"
     };
     private GoogleAccountCredential credential;
     private com.google.api.services.gmail.Gmail mService = null;
@@ -47,6 +53,7 @@ public class BackupService extends IntentService  {
     private JsonFactory jsonFactory;
     private String account;
     private String labelName;
+    private LocalBroadcastManager broadcaster;
     private String user = "me";
 
     private HashMap<String, String> contacts;
@@ -81,9 +88,12 @@ public class BackupService extends IntentService  {
                 transport, jsonFactory, credential)
                 .setApplicationName("SMS Backup and Restore Pro")
                 .build();
+
+        broadcaster = LocalBroadcastManager.getInstance(this);
+
     }
 
-    private void handleParsing(String address, String msg, String date, String name, String folder) throws IOException, MessagingException {
+    private void handleParsing(String address, String msg, String date, String name, String folder, int count, int totalSMS) throws IOException, MessagingException {
 
         String[] labelIDs = {createLabelIfNotExistAndGetLabelID(mService, user, labelName)};
         String subject = "SMS with " + name;
@@ -117,19 +127,34 @@ public class BackupService extends IntentService  {
             insertMessage(mService, user, email, null, labelIDs);
         }
 
+        updateUI(count, totalSMS);
+
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putLong("last_date", Long.valueOf(date));
+        editor.apply();
+
+    }
+
+    private void updateUI(int current, int total){
+        Intent intent = new Intent(BACKUP_RESULT);
+        int[] message = {current, total};
+        intent.putExtra(BACKUP_MESSAGE, message);
+        broadcaster.sendBroadcast(intent);
     }
 
     private void handleBackup() throws IOException, MessagingException {
+        Long l = settings.getLong("last_date", Long.MIN_VALUE);
+        BigInteger lastDate = BigInteger.valueOf(l);
 
         ContentResolver resolver = getContentResolver();
-        Cursor c = resolver.query(uri, projection, null, null, "date ASC");
+        String query = "CAST(date as BIGINT) > " + lastDate + "";
+        Cursor c = resolver.query(uri, projection, query, null, "date ASC");
 
         if (c != null && c.getCount() > 0) {
             c.moveToFirst();
             int totalSMS = c.getCount();
             int count = 0;
-            for (int i = 0; i < 5; i++) {
-                String id = c.getString(c.getColumnIndexOrThrow("_id"));
+            for (int i = 0; i < 20; i++) {
                 String address = c.getString(c
                         .getColumnIndexOrThrow("address"));
                 String msg = c.getString(c.getColumnIndexOrThrow("body"));
@@ -143,9 +168,9 @@ public class BackupService extends IntentService  {
                     folder = "sent";
                 }
 
-                handleParsing(address, msg, date, name, folder);
-
+                handleParsing(address, msg, date, name, folder, count, totalSMS);
                 count++;
+
                 c.moveToNext();
             }
             c.close();

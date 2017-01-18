@@ -31,6 +31,11 @@ public class Utils {
     static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
     static final int REQUEST_PERMISSION_MULTIPLE = 1004;
 
+    static final public String BACKUP_RESULT = "com.gbeatty.smsbackupandrestorepro.BackupService.REQUEST_PROCESSED";
+
+    static final public String BACKUP_MESSAGE = "com.gbeatty.smsbackupandrestorepro.BackupService.BACKUP_MSG";
+
+
     static final String PREF_ACCOUNT_NAME = "accountName";
     static final String[] SCOPES = {GmailScopes.GMAIL_LABELS, GmailScopes.GMAIL_MODIFY};
 
@@ -40,7 +45,7 @@ public class Utils {
 
         Label label = null;
         for(Label l : labels){
-            if(l.getName().equals(name)) label = l;
+            if(l.getName().equalsIgnoreCase(name)) label = l;
         }
 
         if(label == null){
