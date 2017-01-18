@@ -2,51 +2,31 @@ package com.gbeatty.smsbackupandrestorepro;
 
 import android.app.IntentService;
 import android.content.ContentResolver;
-import android.content.CursorLoader;
-import android.content.Intent;
 import android.content.Context;
-import android.content.Loader;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Bundle;
-import android.os.ResultReceiver;
-import android.preference.Preference;
 import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
-import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 
-import com.gbeatty.smsbackupandrestorepro.models.Sms;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
-import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.util.Base64;
 import com.google.api.client.util.ExponentialBackOff;
-import com.google.api.services.gmail.model.Label;
-import com.google.api.services.gmail.model.ListLabelsResponse;
-import com.google.api.services.gmail.model.Message;
 import com.google.api.services.gmail.model.Thread;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Properties;
 
 import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import static android.R.attr.name;
-import static android.icu.lang.UCharacter.GraphemeClusterBreak.L;
 import static com.gbeatty.smsbackupandrestorepro.Utils.PREF_ACCOUNT_NAME;
 import static com.gbeatty.smsbackupandrestorepro.Utils.SCOPES;
 import static com.gbeatty.smsbackupandrestorepro.Utils.createEmail;
@@ -103,63 +83,67 @@ public class BackupService extends IntentService  {
                 .build();
     }
 
+    private void handleParsing(String address, String msg, String date, String name, String folder) throws IOException, MessagingException {
+
+        String[] labelIDs = {createLabelIfNotExistAndGetLabelID(mService, user, labelName)};
+        String subject = "SMS with " + name;
+        String query = "subject:" + subject;
+
+        List<Thread> threads = getThreadsWithLabelsQuery(mService, user, query, labelIDs);
+
+        Thread thread = null;
+        if(threads.size() > 0){
+            thread = threads.get(0);
+        }
+
+        String from;
+        String to;
+        String personal;
+
+        if(folder.equals("inbox")){
+            to = account;
+            personal = name;
+            from = address + "@g.mail";
+        }else{
+            to = address + "@g.mail";
+            personal = "me";
+            from = account;
+        }
+
+        MimeMessage email = createEmail(to, from, personal, subject, msg, new Date(Long.valueOf(date)));
+        if(thread != null) {
+            insertMessage(mService, user, email, thread.getId(), labelIDs);
+        }else{
+            insertMessage(mService, user, email, null, labelIDs);
+        }
+
+    }
+
     private void handleBackup() throws IOException, MessagingException {
 
         ContentResolver resolver = getContentResolver();
-        Cursor c = resolver.query(uri, projection, null,null,null);
-
-        String[] labelIDs = {createLabelIfNotExistAndGetLabelID(mService, user, labelName)};
+        Cursor c = resolver.query(uri, projection, null, null, "date ASC");
 
         if (c != null && c.getCount() > 0) {
             c.moveToFirst();
             int totalSMS = c.getCount();
             int count = 0;
-            for (int i = 0; i < totalSMS; i++) {
+            for (int i = 0; i < 5; i++) {
                 String id = c.getString(c.getColumnIndexOrThrow("_id"));
                 String address = c.getString(c
                         .getColumnIndexOrThrow("address"));
                 String msg = c.getString(c.getColumnIndexOrThrow("body"));
                 String date = c.getString(c.getColumnIndexOrThrow("date"));
-                String folder = "";
+                String folder;
                 String name = getContactName(this, address);
+                if(name == null) name = address;
                 if (c.getString(c.getColumnIndexOrThrow("type")).contains("1")) {
                     folder = "inbox";
                 } else {
                     folder = "sent";
                 }
-                if(name == null) name = address;
 
-                String subject = "SMS with " + name;
-                String query = "subject:" + subject;
-
-                List<Thread> threads = getThreadsWithLabelsQuery(mService, user, query, labelIDs);
-
-                Thread thread = null;
-                if(threads.size() > 0){
-                    thread = threads.get(0);
-                }
-
-
-                String from;
-                String to;
-                String personal;
-
-                if(folder.equals("inbox")){
-                    to = account;
-                    personal = name;
-                    from = address + "@unknown.email";
-                }else{
-                    to = address + "@unknown.email";
-                    personal = "me";
-                    from = account;
-                }
-
-                MimeMessage email = createEmail(to, from, personal, subject, msg, new Date(Long.valueOf(date)));
-                if(thread != null) {
-                    insertMessage(mService, user, email, thread.getId(), labelIDs);
-                }else{
-                    insertMessage(mService, user, email, null, labelIDs);
-                }
+                handleParsing(address, msg, date, name, folder);
 
                 count++;
                 c.moveToNext();

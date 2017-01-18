@@ -7,8 +7,12 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
+import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
 import android.view.MenuItem;
+
+import com.afollestad.materialdialogs.prefs.MaterialEditTextPreference;
+import com.afollestad.materialdialogs.prefs.MaterialListPreference;
 
 import static com.gbeatty.smsbackupandrestorepro.Utils.PREF_ACCOUNT_NAME;
 
@@ -74,7 +78,7 @@ public class PreferenceActivity extends BaseActivity implements OnCompleteListen
         return super.onOptionsItemSelected(item);
     }
 
-    public static class SettingsFragment extends PreferenceFragment {
+    public static class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener{
 
         private OnCompleteListener mListener;
 
@@ -83,6 +87,7 @@ public class PreferenceActivity extends BaseActivity implements OnCompleteListen
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.preferences);
             mListener.onComplete();
+            initSummary(getPreferenceScreen());
         }
 
         @Override
@@ -101,6 +106,54 @@ public class PreferenceActivity extends BaseActivity implements OnCompleteListen
                 throw new ClassCastException(a.toString() + " must implement OnCompleteListener");
             }
 
+        }
+
+        @Override
+        public void onResume() {
+            super.onResume();
+            // Set up a listener whenever a key changes
+            getPreferenceScreen().getSharedPreferences()
+                    .registerOnSharedPreferenceChangeListener(this);
+        }
+
+        @Override
+        public void onPause() {
+            super.onPause();
+            // Unregister the listener whenever a key changes
+            getPreferenceScreen().getSharedPreferences()
+                    .unregisterOnSharedPreferenceChangeListener(this);
+        }
+
+        private void initSummary(Preference p) {
+            if (p instanceof PreferenceGroup) {
+                PreferenceGroup pGrp = (PreferenceGroup) p;
+                for (int i = 0; i < pGrp.getPreferenceCount(); i++) {
+                    initSummary(pGrp.getPreference(i));
+                }
+            } else {
+                updatePrefSummary(p);
+            }
+        }
+
+        private void updatePrefSummary(Preference pref){
+            if(pref instanceof MaterialEditTextPreference){
+                MaterialEditTextPreference materialEditTextPreference = (MaterialEditTextPreference) pref;
+                if(materialEditTextPreference.getKey().equals("backup_interval")){
+                    pref.setSummary("Every " + materialEditTextPreference.getText() + " hours");
+                }else{
+                    pref.setSummary(materialEditTextPreference.getText());
+                }
+            }
+            if(pref instanceof MaterialListPreference){
+                MaterialListPreference listPreference = (MaterialListPreference) pref;
+                pref.setSummary(listPreference.getEntry() + " most recent messages");
+            }
+        }
+
+        @Override
+        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+            Preference pref = findPreference(s);
+            updatePrefSummary(pref);
         }
     }
 }

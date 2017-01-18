@@ -12,14 +12,12 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.util.ExponentialBackOff;
-import com.google.api.services.gmail.GmailScopes;
 
 import java.util.Arrays;
 import java.util.List;
@@ -97,7 +95,7 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
             }
 
         } else {
-            EasyPermissions.requestPermissions(this, "This app needs permission to view SMS and get your Google Account info", REQUEST_PERMISSION_MULTIPLE, Manifest.permission.GET_ACCOUNTS, Manifest.permission.READ_SMS, Manifest.permission.READ_CONTACTS);
+            EasyPermissions.requestPermissions(this, "This app needs permission to view SMS, read contact names, and get your Google Account email. More info in the Google Play Store description.", REQUEST_PERMISSION_MULTIPLE, Manifest.permission.GET_ACCOUNTS, Manifest.permission.READ_SMS, Manifest.permission.READ_CONTACTS);
         }
 
     }
@@ -114,7 +112,7 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
      */
     @Override
     public void onPermissionsDenied(int requestCode, List<String> list) {
-        // Do nothing.
+
     }
 
     /**
