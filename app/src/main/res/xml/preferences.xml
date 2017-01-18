@@ -6,7 +6,7 @@
         <Preference
             android:key="backup_account"
             android:summary="No account selected"
-            android:title="Backup Account"></Preference>
+            android:title="Backup Account"/>
 
         <com.afollestad.materialdialogs.prefs.MaterialEditTextPreference
             android:defaultValue="1"

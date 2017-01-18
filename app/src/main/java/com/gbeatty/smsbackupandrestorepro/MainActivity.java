@@ -24,6 +24,10 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import me.zhanghai.android.materialprogressbar.MaterialProgressBar;
 
+import static com.gbeatty.smsbackupandrestorepro.Utils.PREF_ACCOUNT_NAME;
+import static com.gbeatty.smsbackupandrestorepro.Utils.REQUEST_AUTHORIZATION;
+import static com.gbeatty.smsbackupandrestorepro.Utils.SCOPES;
+
 public class MainActivity extends BaseActivity {
 
 
@@ -136,7 +140,7 @@ public class MainActivity extends BaseActivity {
                 } else if (mLastError instanceof UserRecoverableAuthIOException) {
                     startActivityForResult(
                             ((UserRecoverableAuthIOException) mLastError).getIntent(),
-                            MainActivity.REQUEST_AUTHORIZATION);
+                            REQUEST_AUTHORIZATION);
                 }
                 else{
                     //user is authenticated start the service

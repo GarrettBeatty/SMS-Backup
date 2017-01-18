@@ -26,15 +26,13 @@ import java.util.List;
 
 import pub.devrel.easypermissions.EasyPermissions;
 
+import static com.gbeatty.smsbackupandrestorepro.Utils.PREF_ACCOUNT_NAME;
+import static com.gbeatty.smsbackupandrestorepro.Utils.REQUEST_ACCOUNT_PICKER;
+import static com.gbeatty.smsbackupandrestorepro.Utils.REQUEST_GOOGLE_PLAY_SERVICES;
+import static com.gbeatty.smsbackupandrestorepro.Utils.REQUEST_PERMISSION_MULTIPLE;
+import static com.gbeatty.smsbackupandrestorepro.Utils.SCOPES;
+
 public abstract class BaseActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
-
-    static final int REQUEST_ACCOUNT_PICKER = 1000;
-    static final int REQUEST_AUTHORIZATION = 1001;
-    static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
-    static final int REQUEST_PERMISSION_MULTIPLE = 1004;
-
-    static final String PREF_ACCOUNT_NAME = "accountName";
-    static final String[] SCOPES = {GmailScopes.GMAIL_LABELS, GmailScopes.GMAIL_MODIFY};
     GoogleAccountCredential mCredential;
 
     @Override
@@ -78,7 +76,7 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
 
 
     public void chooseAccount(boolean settings) {
-        if (EasyPermissions.hasPermissions(this, Manifest.permission.GET_ACCOUNTS, Manifest.permission.READ_SMS)) {
+        if (EasyPermissions.hasPermissions(this, Manifest.permission.GET_ACCOUNTS, Manifest.permission.READ_SMS,Manifest.permission.READ_CONTACTS)) {
             // Start a dialog from which the user can choose an account
             String accountName = PreferenceManager.getDefaultSharedPreferences(this)
                     .getString(PREF_ACCOUNT_NAME, null);
@@ -99,10 +97,12 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
             }
 
         } else {
-            EasyPermissions.requestPermissions(this, "This app needs permission to view SMS and get your Google Account info", REQUEST_PERMISSION_MULTIPLE, Manifest.permission.GET_ACCOUNTS, Manifest.permission.READ_SMS);
+            EasyPermissions.requestPermissions(this, "This app needs permission to view SMS and get your Google Account info", REQUEST_PERMISSION_MULTIPLE, Manifest.permission.GET_ACCOUNTS, Manifest.permission.READ_SMS, Manifest.permission.READ_CONTACTS);
         }
 
     }
+
+
 
     /**
      * Callback for when a permission is denied using the EasyPermissions

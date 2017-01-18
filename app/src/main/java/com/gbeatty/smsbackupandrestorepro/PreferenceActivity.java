@@ -10,6 +10,8 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.view.MenuItem;
 
+import static com.gbeatty.smsbackupandrestorepro.Utils.PREF_ACCOUNT_NAME;
+
 interface OnCompleteListener {
     void onComplete();
 }
