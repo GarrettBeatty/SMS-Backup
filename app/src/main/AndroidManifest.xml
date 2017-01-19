@@ -25,11 +25,9 @@
             android:name=".PreferenceActivity"
             android:label="Settings" />
 
-        <activity android:name=".BaseActivity" />
-
         <service
             android:name=".BackupService"
-            android:exported="false"></service>
+            android:exported="false"/>
     </application>
 
 </manifest>

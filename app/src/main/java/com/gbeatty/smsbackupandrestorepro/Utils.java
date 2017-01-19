@@ -32,8 +32,8 @@ public class Utils {
     static final int REQUEST_PERMISSION_MULTIPLE = 1004;
 
     static final public String BACKUP_RESULT = "com.gbeatty.smsbackupandrestorepro.BackupService.REQUEST_PROCESSED";
-
     static final public String BACKUP_MESSAGE = "com.gbeatty.smsbackupandrestorepro.BackupService.BACKUP_MSG";
+    static final public String BACKUP_COMPLETE = "com.gbeatty.smsbackupandrestorepro.BackupService.BACKUP_COMPLETE";
 
 
     static final String PREF_ACCOUNT_NAME = "accountName";

@@ -1,16 +1,18 @@
 package com.gbeatty.smsbackupandrestorepro;
 
 import android.app.IntentService;
+import android.app.Service;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
+import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
@@ -25,13 +27,12 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import static android.R.id.message;
+import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_COMPLETE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_MESSAGE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_RESULT;
 import static com.gbeatty.smsbackupandrestorepro.Utils.PREF_ACCOUNT_NAME;
@@ -41,7 +42,7 @@ import static com.gbeatty.smsbackupandrestorepro.Utils.createLabelIfNotExistAndG
 import static com.gbeatty.smsbackupandrestorepro.Utils.getThreadsWithLabelsQuery;
 import static com.gbeatty.smsbackupandrestorepro.Utils.insertMessage;
 
-public class BackupService extends IntentService  {
+public class BackupService extends Service {
 
     private Uri uri = Uri.parse("content://sms/");
     private String[] projection = {"address", "read", "body", "date", "type"
@@ -55,12 +56,24 @@ public class BackupService extends IntentService  {
     private String labelName;
     private LocalBroadcastManager broadcaster;
     private String user = "me";
+    private java.lang.Thread thread;
 
+    private HashMap<String, String> threadIDs;
     private HashMap<String, String> contacts;
+    public static boolean RUNNING;
 
-    public BackupService() {
-        super("BackupService");
-    }
+    private Runnable run = new Runnable() {
+        public void run() {
+            try {
+                handleBackup();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (MessagingException e) {
+                e.printStackTrace();
+            }
+        }
+    };
+
 
     @Override
     public void onCreate() {
@@ -81,6 +94,7 @@ public class BackupService extends IntentService  {
         labelName = settings.getString("gmail_label", "sms");
 
         contacts = new HashMap<>(200);
+        threadIDs = new HashMap<>(200);
 
         transport = AndroidHttp.newCompatibleTransport();
         jsonFactory = JacksonFactory.getDefaultInstance();
@@ -89,8 +103,15 @@ public class BackupService extends IntentService  {
                 .setApplicationName("SMS Backup and Restore Pro")
                 .build();
 
+        thread = new java.lang.Thread(run);
         broadcaster = LocalBroadcastManager.getInstance(this);
 
+    }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 
     private void handleParsing(String address, String msg, String date, String name, String folder, int count, int totalSMS) throws IOException, MessagingException {
@@ -99,11 +120,16 @@ public class BackupService extends IntentService  {
         String subject = "SMS with " + name;
         String query = "subject:" + subject;
 
-        List<Thread> threads = getThreadsWithLabelsQuery(mService, user, query, labelIDs);
+        String threadID = null;
 
-        Thread thread = null;
-        if(threads.size() > 0){
-            thread = threads.get(0);
+        if(threadIDs.containsKey(subject)){
+            threadID = threadIDs.get(subject);
+        }else{
+            List<Thread> threads = getThreadsWithLabelsQuery(mService, user, query, labelIDs);
+            if(threads.size() > 0){
+                threadID = threads.get(0).getId();
+                threadIDs.put(subject, threadID);
+            }
         }
 
         String from;
@@ -121,13 +147,9 @@ public class BackupService extends IntentService  {
         }
 
         MimeMessage email = createEmail(to, from, personal, subject, msg, new Date(Long.valueOf(date)));
-        if(thread != null) {
-            insertMessage(mService, user, email, thread.getId(), labelIDs);
-        }else{
-            insertMessage(mService, user, email, null, labelIDs);
-        }
+        insertMessage(mService, user, email, threadID, labelIDs);
 
-        updateUI(count, totalSMS);
+        updateProgress(count, totalSMS);
 
         SharedPreferences.Editor editor = settings.edit();
         editor.putLong("last_date", Long.valueOf(date));
@@ -135,14 +157,19 @@ public class BackupService extends IntentService  {
 
     }
 
-    private void updateUI(int current, int total){
+    private void updateProgress(int current, int total){
         Intent intent = new Intent(BACKUP_RESULT);
-        int[] message = {current, total};
+        int completed = (current == total) ? 1 : 0;
+        int[] message = {current, total, completed};
         intent.putExtra(BACKUP_MESSAGE, message);
         broadcaster.sendBroadcast(intent);
     }
 
     private void handleBackup() throws IOException, MessagingException {
+
+        //running
+        RUNNING = true;
+
         Long l = settings.getLong("last_date", Long.MIN_VALUE);
         BigInteger lastDate = BigInteger.valueOf(l);
 
@@ -153,8 +180,15 @@ public class BackupService extends IntentService  {
         if (c != null && c.getCount() > 0) {
             c.moveToFirst();
             int totalSMS = c.getCount();
-            int count = 0;
+            int count = 1;
             for (int i = 0; i < 20; i++) {
+
+                if(!RUNNING){
+                    updateProgress(0,1);
+                    c.close();
+                    return;
+                }
+
                 String address = c.getString(c
                         .getColumnIndexOrThrow("address"));
                 String msg = c.getString(c.getColumnIndexOrThrow("body"));
@@ -173,9 +207,10 @@ public class BackupService extends IntentService  {
 
                 c.moveToNext();
             }
+            RUNNING = false;
+            updateProgress(0,0);
             c.close();
         }
-
     }
 
     public String getContactName(Context context, String phoneNumber) {
@@ -203,17 +238,11 @@ public class BackupService extends IntentService  {
     }
 
     @Override
-    protected void onHandleIntent(Intent intent) {
-
-        if(intent != null){
-            try {
-                handleBackup();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (MessagingException e) {
-                e.printStackTrace();
-            }
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if(!thread.isAlive()){
+            thread.start();
         }
+        return  START_STICKY;
     }
 
 }

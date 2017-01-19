@@ -146,6 +146,9 @@ public class PreferenceActivity extends BaseActivity implements OnCompleteListen
             }
             if(pref instanceof MaterialListPreference){
                 MaterialListPreference listPreference = (MaterialListPreference) pref;
+                if(listPreference.getEntry() == null){
+                    listPreference.setValueIndex(0);
+                }
                 pref.setSummary(listPreference.getEntry() + " most recent messages");
             }
         }

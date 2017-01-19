@@ -9,6 +9,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
@@ -28,6 +29,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import me.zhanghai.android.materialprogressbar.MaterialProgressBar;
 
+import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_COMPLETE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_MESSAGE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_RESULT;
 import static com.gbeatty.smsbackupandrestorepro.Utils.PREF_ACCOUNT_NAME;
@@ -42,6 +44,8 @@ public class MainActivity extends BaseActivity {
     @BindView(R.id.progress)
     MaterialProgressBar progressBar;
     private BroadcastReceiver receiver;
+    @BindView(R.id.backupButton)
+    Button backupButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,12 +55,24 @@ public class MainActivity extends BaseActivity {
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                int[] message = intent.getIntArrayExtra(BACKUP_MESSAGE);
-                int count = message[0];
-                int total = message[1];
-                progressInfo.setText(getResources().getString(R.string.progress_info, count, total));
-                int percent = (100 * count) / total;
-                progressBar.setProgress(percent);
+                if(BackupService.RUNNING) {
+                    int[] message = intent.getIntArrayExtra(BACKUP_MESSAGE);
+                    int count = message[0];
+                    int total = message[1];
+                    progressInfo.setText(getResources().getString(R.string.progress_info, count, total));
+                    int percent = (100 * count) / total;
+                    progressBar.setProgress(percent);
+                    backupButton.setText("Stop Backup");
+                }else{
+                    backupButton.setText("Backup");
+                    progressBar.setProgress(0);
+                    int completed = intent.getIntArrayExtra(BACKUP_MESSAGE)[2];
+                    if(completed == 1){
+                        progressInfo.setText("Progress: Completed");
+                    }
+                    progressInfo.setText("Progress: Idle");
+                }
+
             }
         };
     }
@@ -68,7 +84,12 @@ public class MainActivity extends BaseActivity {
 
     @OnClick(R.id.backupButton)
     public void backup() {
-        getAllSms();
+        if(!BackupService.RUNNING){
+            getAllSms();
+        }else{
+            BackupService.RUNNING = false;
+        }
+
     }
 
     @OnClick(R.id.restoreButton)
