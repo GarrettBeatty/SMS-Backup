@@ -12,6 +12,8 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.gbeatty.smsbackupandrestorepro.presenter.MainPresenter;
+import com.gbeatty.smsbackupandrestorepro.views.MainView;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
@@ -29,14 +31,12 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import me.zhanghai.android.materialprogressbar.MaterialProgressBar;
 
-import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_COMPLETE;
-import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_MESSAGE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_RESULT;
 import static com.gbeatty.smsbackupandrestorepro.Utils.PREF_ACCOUNT_NAME;
 import static com.gbeatty.smsbackupandrestorepro.Utils.REQUEST_AUTHORIZATION;
 import static com.gbeatty.smsbackupandrestorepro.Utils.SCOPES;
 
-public class MainActivity extends BaseActivity {
+public class MainActivity extends BaseActivity implements MainView {
 
 
     @BindView(R.id.progress_info)
@@ -46,33 +46,19 @@ public class MainActivity extends BaseActivity {
     private BroadcastReceiver receiver;
     @BindView(R.id.backupButton)
     Button backupButton;
+    private MainPresenter presenter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        presenter = new MainPresenter(this);
+
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if(BackupService.RUNNING) {
-                    int[] message = intent.getIntArrayExtra(BACKUP_MESSAGE);
-                    int count = message[0];
-                    int total = message[1];
-                    progressInfo.setText(getResources().getString(R.string.progress_info, count, total));
-                    int percent = (100 * count) / total;
-                    progressBar.setProgress(percent);
-                    backupButton.setText("Stop Backup");
-                }else{
-                    backupButton.setText("Backup");
-                    progressBar.setProgress(0);
-                    int completed = intent.getIntArrayExtra(BACKUP_MESSAGE)[2];
-                    if(completed == 1){
-                        progressInfo.setText("Progress: Completed");
-                    }
-                    progressInfo.setText("Progress: Idle");
-                }
-
+                presenter.handleBackupReceiver(intent);
             }
         };
     }
@@ -84,12 +70,7 @@ public class MainActivity extends BaseActivity {
 
     @OnClick(R.id.backupButton)
     public void backup() {
-        if(!BackupService.RUNNING){
-            getAllSms();
-        }else{
-            BackupService.RUNNING = false;
-        }
-
+        presenter.backup();
     }
 
     @OnClick(R.id.restoreButton)
@@ -136,6 +117,36 @@ public class MainActivity extends BaseActivity {
     protected void onStop() {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
         super.onStop();
+    }
+
+    @Override
+    public void updateProgressInfo(int count, int total) {
+        progressInfo.setText(getResources().getString(R.string.progress_info, count, total));
+    }
+
+    @Override
+    public void updateProgressBar(int percent) {
+        progressBar.setProgress(percent);
+    }
+
+    @Override
+    public void updateBackupButtonText(String text) {
+        backupButton.setText(text);
+    }
+
+    @Override
+    public void updateProgressInfo(String status) {
+        progressInfo.setText(getResources().getString(R.string.progress_info_status, status));
+    }
+
+    @Override
+    public void enableBackupButton(boolean enabled) {
+        backupButton.setEnabled(enabled);
+    }
+
+    @Override
+    public void getSMS() {
+        getAllSms();
     }
 
     //really dirty way of prompting oauth screen

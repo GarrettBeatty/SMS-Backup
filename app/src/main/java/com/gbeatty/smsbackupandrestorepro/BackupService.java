@@ -1,6 +1,5 @@
 package com.gbeatty.smsbackupandrestorepro;
 
-import android.app.IntentService;
 import android.app.Service;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -32,7 +31,6 @@ import java.util.List;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_COMPLETE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_MESSAGE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_RESULT;
 import static com.gbeatty.smsbackupandrestorepro.Utils.PREF_ACCOUNT_NAME;
@@ -56,24 +54,10 @@ public class BackupService extends Service {
     private String labelName;
     private LocalBroadcastManager broadcaster;
     private String user = "me";
-    private java.lang.Thread thread;
 
     private HashMap<String, String> threadIDs;
     private HashMap<String, String> contacts;
     public static boolean RUNNING;
-
-    private Runnable run = new Runnable() {
-        public void run() {
-            try {
-                handleBackup();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (MessagingException e) {
-                e.printStackTrace();
-            }
-        }
-    };
-
 
     @Override
     public void onCreate() {
@@ -103,7 +87,6 @@ public class BackupService extends Service {
                 .setApplicationName("SMS Backup and Restore Pro")
                 .build();
 
-        thread = new java.lang.Thread(run);
         broadcaster = LocalBroadcastManager.getInstance(this);
 
     }
@@ -180,8 +163,8 @@ public class BackupService extends Service {
         if (c != null && c.getCount() > 0) {
             c.moveToFirst();
             int totalSMS = c.getCount();
-            int count = 1;
-            for (int i = 0; i < 20; i++) {
+            int count = 0;
+            for (int i = 0; i < 5; i++) {
 
                 if(!RUNNING){
                     updateProgress(0,1);
@@ -202,8 +185,8 @@ public class BackupService extends Service {
                     folder = "sent";
                 }
 
-                handleParsing(address, msg, date, name, folder, count, totalSMS);
                 count++;
+                handleParsing(address, msg, date, name, folder, count, totalSMS);
 
                 c.moveToNext();
             }
@@ -239,10 +222,34 @@ public class BackupService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if(!thread.isAlive()){
-            thread.start();
-        }
+        performOnBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    handleBackup();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (MessagingException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
         return  START_STICKY;
+    }
+
+    public static java.lang.Thread performOnBackgroundThread(final Runnable runnable) {
+        final java.lang.Thread t = new java.lang.Thread() {
+            @Override
+            public void run() {
+                try {
+                    runnable.run();
+                } finally {
+
+                }
+            }
+        };
+        t.start();
+        return t;
     }
 
 }

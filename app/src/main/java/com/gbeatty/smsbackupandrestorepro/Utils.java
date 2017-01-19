@@ -35,7 +35,6 @@ public class Utils {
     static final public String BACKUP_MESSAGE = "com.gbeatty.smsbackupandrestorepro.BackupService.BACKUP_MSG";
     static final public String BACKUP_COMPLETE = "com.gbeatty.smsbackupandrestorepro.BackupService.BACKUP_COMPLETE";
 
-
     static final String PREF_ACCOUNT_NAME = "accountName";
     static final String[] SCOPES = {GmailScopes.GMAIL_LABELS, GmailScopes.GMAIL_MODIFY};
 
