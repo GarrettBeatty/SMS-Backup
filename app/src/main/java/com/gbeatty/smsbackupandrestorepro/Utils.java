@@ -31,9 +31,13 @@ public class Utils {
     static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
     static final int REQUEST_PERMISSION_MULTIPLE = 1004;
 
-    static final public String BACKUP_RESULT = "com.gbeatty.smsbackupandrestorepro.BackupService.REQUEST_PROCESSED";
-    static final public String BACKUP_MESSAGE = "com.gbeatty.smsbackupandrestorepro.BackupService.BACKUP_MSG";
-    static final public String BACKUP_COMPLETE = "com.gbeatty.smsbackupandrestorepro.BackupService.BACKUP_COMPLETE";
+    public static final int BACKUP_IDLE = 0;
+    public static final int BACKUP_COMPLETE = 1;
+    public static final int BACKUP_STARTING = 2;
+    public static final int BACKUP_STOPPING = 3;
+
+    public static final String BACKUP_RESULT = "com.gbeatty.smsbackupandrestorepro.BackupService.REQUEST_PROCESSED";
+    public static final String BACKUP_MESSAGE = "com.gbeatty.smsbackupandrestorepro.BackupService.BACKUP_MSG";
 
     static final String PREF_ACCOUNT_NAME = "accountName";
     static final String[] SCOPES = {GmailScopes.GMAIL_LABELS, GmailScopes.GMAIL_MODIFY};

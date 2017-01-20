@@ -32,14 +32,18 @@ import java.util.List;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_COMPLETE;
+import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_IDLE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_MESSAGE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_RESULT;
+import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_STARTING;
 import static com.gbeatty.smsbackupandrestorepro.Utils.PREF_ACCOUNT_NAME;
 import static com.gbeatty.smsbackupandrestorepro.Utils.SCOPES;
 import static com.gbeatty.smsbackupandrestorepro.Utils.createEmail;
 import static com.gbeatty.smsbackupandrestorepro.Utils.createLabelIfNotExistAndGetLabelID;
 import static com.gbeatty.smsbackupandrestorepro.Utils.getThreadsWithLabelsQuery;
 import static com.gbeatty.smsbackupandrestorepro.Utils.insertMessage;
+import static com.google.common.util.concurrent.Service.State.STARTING;
 
 public class BackupService extends Service {
 
@@ -133,7 +137,7 @@ public class BackupService extends Service {
         MimeMessage email = createEmail(to, from, personal, subject, msg, new Date(Long.valueOf(date)));
         insertMessage(mService, user, email, threadID, labelIDs);
 
-        updateProgress(count, totalSMS, 0);
+        updateProgress(count, totalSMS, BACKUP_IDLE);
 
         SharedPreferences.Editor editor = settings.edit();
         editor.putLong("last_date", Long.valueOf(date));
@@ -141,17 +145,16 @@ public class BackupService extends Service {
 
     }
 
-    private void updateProgress(int current, int total, int completed){
+    private void updateProgress(int current, int total, int status){
         Intent intent = new Intent(BACKUP_RESULT);
-        int[] message = {current, total, completed};
+        int[] message = {current, total, status};
         intent.putExtra(BACKUP_MESSAGE, message);
         broadcaster.sendBroadcast(intent);
     }
 
     private void handleBackup() throws IOException, MessagingException {
-
+        updateProgress(0,0, BACKUP_STARTING);
         //running
-        RUNNING = true;
 
         Long l = settings.getLong("last_date", Long.MIN_VALUE);
         BigInteger lastDate = BigInteger.valueOf(l);
@@ -161,13 +164,14 @@ public class BackupService extends Service {
         Cursor c = resolver.query(uri, projection, query, null, "date ASC");
 
         if (c != null && c.getCount() > 0) {
+            RUNNING = true;
             c.moveToFirst();
             int totalSMS = c.getCount();
             int count = 0;
             for (int i = 0; i < 5; i++) {
 
                 if(!RUNNING){
-                    updateProgress(0,0,0);
+                    updateProgress(0,0,BACKUP_IDLE);
                     c.close();
                     return;
                 }
@@ -191,7 +195,7 @@ public class BackupService extends Service {
                 c.moveToNext();
             }
             RUNNING = false;
-            updateProgress(0,0,1);
+            updateProgress(0,0,BACKUP_COMPLETE);
             c.close();
         }
     }
@@ -222,15 +226,16 @@ public class BackupService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d("STARTING", "SERVICE");
         performOnBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 try {
                     handleBackup();
                 } catch (IOException e) {
+                    RUNNING = false;
                     e.printStackTrace();
                 } catch (MessagingException e) {
+                    RUNNING = false;
                     e.printStackTrace();
                 }
             }
