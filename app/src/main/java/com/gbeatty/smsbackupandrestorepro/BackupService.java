@@ -159,10 +159,8 @@ public class BackupService extends Service {
     }
 
     private void handleBackup() throws IOException, MessagingException {
+        RUNNING = true;
         updateProgress(0,0, BACKUP_STARTING);
-
-        //running
-
         Long l = settings.getLong("last_date", Long.MIN_VALUE);
         BigInteger lastDate = BigInteger.valueOf(l);
 
@@ -171,7 +169,6 @@ public class BackupService extends Service {
         Cursor c = resolver.query(uri, projection, query, null, "date ASC");
 
         if (c != null && c.getCount() > 0) {
-            RUNNING = true;
             c.moveToFirst();
             int totalSMS = c.getCount();
             int count = 0;
@@ -241,9 +238,11 @@ public class BackupService extends Service {
                     handleBackup();
                 } catch (IOException e) {
                     RUNNING = false;
+                    updateProgress(0,0,BACKUP_IDLE);
                     e.printStackTrace();
                 } catch (MessagingException e) {
                     RUNNING = false;
+                    updateProgress(0,0,BACKUP_IDLE);
                     e.printStackTrace();
                 }
             }

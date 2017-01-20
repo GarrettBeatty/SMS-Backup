@@ -80,19 +80,19 @@ public class MainPresenter {
     private void updateNotification(int count, int total, int status){
         switch (status){
             case BACKUP_STARTING:
-                view.updateNotification("Starting...");
+                view.updateNotification("Progress: Starting...");
                 break;
             case BACKUP_RUNNING:
                 view.updateNotification("" + count + " out of " + total + " SMS backed up");
                 break;
             case BACKUP_STOPPING:
-                view.updateNotification("Stopping...");
+                view.updateNotification("Progress: Stopping...");
                 break;
             case BACKUP_COMPLETE:
-                view.updateNotification("Backup Complete");
+                view.updateNotification("Progress: Complete");
                 break;
             case BACKUP_IDLE:
-                view.updateNotification("Idle");
+                view.updateNotification("Progress: Idle");
         }
     }
 
