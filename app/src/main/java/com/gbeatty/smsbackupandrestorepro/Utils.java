@@ -35,6 +35,7 @@ public class Utils {
     public static final int BACKUP_COMPLETE = 1;
     public static final int BACKUP_STARTING = 2;
     public static final int BACKUP_STOPPING = 3;
+    public static final int BACKUP_RUNNING = 4;
 
     public static final String BACKUP_RESULT = "com.gbeatty.smsbackupandrestorepro.BackupService.REQUEST_PROCESSED";
     public static final String BACKUP_MESSAGE = "com.gbeatty.smsbackupandrestorepro.BackupService.BACKUP_MSG";

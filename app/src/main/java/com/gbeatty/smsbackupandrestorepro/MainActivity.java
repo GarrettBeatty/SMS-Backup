@@ -1,6 +1,7 @@
 package com.gbeatty.smsbackupandrestorepro;
 
 import android.app.AlarmManager;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -10,6 +11,7 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Button;
@@ -54,13 +56,20 @@ public class MainActivity extends BaseActivity implements MainView {
     private Intent intent;
     private PendingIntent pintent;
     private AlarmManager alarm;
+    private SharedPreferences settings;
+
+
+    private NotificationManager mNotificationManager = null;
+    private NotificationCompat.Builder mNotifyBuilder = null;
+    private int notifyID = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-        presenter = new MainPresenter(this);
+        settings = PreferenceManager.getDefaultSharedPreferences(this);
+        presenter = new MainPresenter(this, settings);
 
         receiver = new BroadcastReceiver() {
             @Override
@@ -90,6 +99,25 @@ public class MainActivity extends BaseActivity implements MainView {
 
     }
 
+    public void updateNotification(String text){
+        mNotifyBuilder.setContentText(text);
+        // Because the ID remains unchanged, the existing notification is
+        // updated.
+        mNotificationManager.notify(
+                notifyID,
+                mNotifyBuilder.build());
+    }
+
+    public void activateNotification(String title, String content){
+        mNotificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+// Sets an ID for the notification, so it can be updated
+        mNotifyBuilder = new NotificationCompat.Builder(this)
+                .setContentTitle(title)
+                .setContentText(content)
+                .setSmallIcon(R.mipmap.ic_launcher);
+    }
+
     @OnClick(R.id.settingsButton)
     public void settings() {
         startActivity(new Intent(this, PreferenceActivity.class));
@@ -110,7 +138,6 @@ public class MainActivity extends BaseActivity implements MainView {
                 getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());
 
-        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
         String account = settings.getString(PREF_ACCOUNT_NAME, null);
         credential.setSelectedAccountName(account);
         new TestOAuth(credential).execute();
@@ -152,7 +179,6 @@ public class MainActivity extends BaseActivity implements MainView {
     }
 
     private void startBackupService() {
-        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
         String i = settings.getString("backup_interval", "1");
         Long interval = Long.valueOf(i) * 3600000;
 
@@ -163,8 +189,6 @@ public class MainActivity extends BaseActivity implements MainView {
             Intent serviceIntent = new Intent(getApplicationContext(), BackupService.class);
             startService(serviceIntent);
         }
-
-        Log.d("TRYING", "TESTING");
     }
 
     @Override

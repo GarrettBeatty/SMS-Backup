@@ -1,51 +1,59 @@
 package com.gbeatty.smsbackupandrestorepro.presenter;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 
 import com.gbeatty.smsbackupandrestorepro.BackupService;
 import com.gbeatty.smsbackupandrestorepro.views.MainView;
 
-import junit.framework.Assert;
-
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_COMPLETE;
+import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_IDLE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_MESSAGE;
+import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_RUNNING;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_STARTING;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_STOPPING;
 
 public class MainPresenter {
 
     private MainView view;
+    private SharedPreferences settings;
 
-    public MainPresenter(MainView view){
+    public MainPresenter(MainView view, SharedPreferences settings){
         this.view = view;
+        this.settings = settings;
     }
 
     public void handleBackupReceiver(Intent intent){
-        if(BackupService.RUNNING) {
-            int[] message = intent.getIntArrayExtra(BACKUP_MESSAGE);
-            int count = message[0];
-            int total = message[1];
-            updateProgressInfo(count, total);
+        int[] message = intent.getIntArrayExtra(BACKUP_MESSAGE);
+        int count = message[0];
+        int total = message[1];
+        int status = message[2];
+
+        if(status == BACKUP_RUNNING){
             int percent = 0;
             if(total != 0){
-                 percent = (100 * count) / total;
+                percent = (100 * count) / total;
             }
+            updateProgressInfo(count, total);
             updateProgressBar(percent);
             updateBackupButtonText("Stop Backup");
-        }else{
+
+        }
+        else if(status == BACKUP_COMPLETE){
             updateBackupButtonText("Backup");
             updateProgressBar(0);
-            int status = intent.getIntArrayExtra(BACKUP_MESSAGE)[2];
-            if(status == BACKUP_COMPLETE){
-                updateProgressInfo("Complete");
-            }else if(status == BACKUP_STARTING) {
-                updateProgressInfo("Starting...");
-            }else if(status == BACKUP_STOPPING) {
-                updateProgressInfo("Stopping...");
-            }else{
-                updateProgressInfo("Idle");
-            }
+            updateProgressInfo("Complete");
+        }else if(status == BACKUP_STARTING) {
+            updateProgressInfo("Starting...");
+        }else if(status == BACKUP_STOPPING) {
+            updateProgressInfo("Stopping...");
+        }else if(status == BACKUP_IDLE){
+            updateBackupButtonText("Backup");
+            updateProgressBar(0);
+            updateProgressInfo("Idle");
         }
+
+        if(settings.getBoolean("notifications", false)) updateNotification(count, total, status);
         enableBackupButton(true);
     }
 
@@ -69,10 +77,32 @@ public class MainPresenter {
         view.enableBackupButton(enabled);
     }
 
+    private void updateNotification(int count, int total, int status){
+        switch (status){
+            case BACKUP_STARTING:
+                view.updateNotification("Starting...");
+                break;
+            case BACKUP_RUNNING:
+                view.updateNotification("" + count + " out of " + total + " SMS backed up");
+                break;
+            case BACKUP_STOPPING:
+                view.updateNotification("Stopping...");
+                break;
+            case BACKUP_COMPLETE:
+                view.updateNotification("Backup Complete");
+                break;
+            case BACKUP_IDLE:
+                view.updateNotification("Idle");
+        }
+    }
+
     public void backup() {
         if(!BackupService.RUNNING){
             enableBackupButton(false);
             view.getAllSms();
+            if(settings.getBoolean("notifications", false)){
+                view.activateNotification("SMS Backup", "SMS Backup");
+            }
         }else{
             enableBackupButton(false);
             BackupService.RUNNING = false;

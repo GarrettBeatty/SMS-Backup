@@ -12,4 +12,8 @@ public interface MainView {
     void enableBackupButton(boolean enabled);
 
     void getAllSms();
+
+    void updateNotification(String text);
+
+    void activateNotification(String title, String content);
 }

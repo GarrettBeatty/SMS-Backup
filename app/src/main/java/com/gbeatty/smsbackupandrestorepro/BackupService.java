@@ -1,5 +1,7 @@
 package com.gbeatty.smsbackupandrestorepro;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -11,8 +13,8 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
@@ -32,11 +34,14 @@ import java.util.List;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import static android.R.attr.id;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_COMPLETE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_IDLE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_MESSAGE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_RESULT;
+import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_RUNNING;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_STARTING;
+import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_STOPPING;
 import static com.gbeatty.smsbackupandrestorepro.Utils.PREF_ACCOUNT_NAME;
 import static com.gbeatty.smsbackupandrestorepro.Utils.SCOPES;
 import static com.gbeatty.smsbackupandrestorepro.Utils.createEmail;
@@ -137,7 +142,7 @@ public class BackupService extends Service {
         MimeMessage email = createEmail(to, from, personal, subject, msg, new Date(Long.valueOf(date)));
         insertMessage(mService, user, email, threadID, labelIDs);
 
-        updateProgress(count, totalSMS, BACKUP_IDLE);
+        updateProgress(count, totalSMS, BACKUP_RUNNING);
 
         SharedPreferences.Editor editor = settings.edit();
         editor.putLong("last_date", Long.valueOf(date));
@@ -150,10 +155,12 @@ public class BackupService extends Service {
         int[] message = {current, total, status};
         intent.putExtra(BACKUP_MESSAGE, message);
         broadcaster.sendBroadcast(intent);
+
     }
 
     private void handleBackup() throws IOException, MessagingException {
         updateProgress(0,0, BACKUP_STARTING);
+
         //running
 
         Long l = settings.getLong("last_date", Long.MIN_VALUE);
@@ -171,6 +178,7 @@ public class BackupService extends Service {
             for (int i = 0; i < 5; i++) {
 
                 if(!RUNNING){
+                    updateProgress(0,0,BACKUP_STOPPING);
                     updateProgress(0,0,BACKUP_IDLE);
                     c.close();
                     return;
