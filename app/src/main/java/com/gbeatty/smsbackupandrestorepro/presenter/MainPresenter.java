@@ -59,11 +59,9 @@ public class MainPresenter {
 
     public void backup() {
         if(!BackupService.RUNNING){
-            updateProgressInfo("Starting");
             enableBackupButton(false);
-            view.getSMS();
+            view.getAllSms();
         }else{
-            updateProgressInfo("Stopping");
             enableBackupButton(false);
             BackupService.RUNNING = false;
         }

@@ -12,6 +12,7 @@ import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
@@ -132,7 +133,7 @@ public class BackupService extends Service {
         MimeMessage email = createEmail(to, from, personal, subject, msg, new Date(Long.valueOf(date)));
         insertMessage(mService, user, email, threadID, labelIDs);
 
-        updateProgress(count, totalSMS);
+        updateProgress(count, totalSMS, 0);
 
         SharedPreferences.Editor editor = settings.edit();
         editor.putLong("last_date", Long.valueOf(date));
@@ -140,9 +141,8 @@ public class BackupService extends Service {
 
     }
 
-    private void updateProgress(int current, int total){
+    private void updateProgress(int current, int total, int completed){
         Intent intent = new Intent(BACKUP_RESULT);
-        int completed = (current == total) ? 1 : 0;
         int[] message = {current, total, completed};
         intent.putExtra(BACKUP_MESSAGE, message);
         broadcaster.sendBroadcast(intent);
@@ -167,7 +167,7 @@ public class BackupService extends Service {
             for (int i = 0; i < 5; i++) {
 
                 if(!RUNNING){
-                    updateProgress(0,1);
+                    updateProgress(0,0,0);
                     c.close();
                     return;
                 }
@@ -191,7 +191,7 @@ public class BackupService extends Service {
                 c.moveToNext();
             }
             RUNNING = false;
-            updateProgress(0,0);
+            updateProgress(0,0,1);
             c.close();
         }
     }
@@ -222,6 +222,7 @@ public class BackupService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d("STARTING", "SERVICE");
         performOnBackgroundThread(new Runnable() {
             @Override
             public void run() {

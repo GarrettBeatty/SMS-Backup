@@ -1,5 +1,7 @@
 package com.gbeatty.smsbackupandrestorepro;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +11,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -25,6 +28,7 @@ import com.google.api.client.util.ExponentialBackOff;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Calendar;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -47,6 +51,9 @@ public class MainActivity extends BaseActivity implements MainView {
     @BindView(R.id.backupButton)
     Button backupButton;
     private MainPresenter presenter;
+    private Intent intent;
+    private PendingIntent pintent;
+    private AlarmManager alarm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +68,11 @@ public class MainActivity extends BaseActivity implements MainView {
                 presenter.handleBackupReceiver(intent);
             }
         };
+
+        intent = new Intent(this, BackupService.class);
+        pintent = PendingIntent.getService(this, 0, intent, 0);
+        alarm = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+
     }
 
     @Override
@@ -139,14 +151,25 @@ public class MainActivity extends BaseActivity implements MainView {
         progressInfo.setText(getResources().getString(R.string.progress_info_status, status));
     }
 
-    @Override
-    public void enableBackupButton(boolean enabled) {
-        backupButton.setEnabled(enabled);
+    private void startBackupService() {
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+        String i = settings.getString("backup_interval", "1");
+        Long interval = Long.valueOf(i) * 3600000;
+
+        boolean autoBackup = settings.getBoolean("auto_backup", true);
+        if(autoBackup){
+            alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), interval, pintent);
+        }else{
+            Intent serviceIntent = new Intent(getApplicationContext(), BackupService.class);
+            startService(serviceIntent);
+        }
+
+        Log.d("TRYING", "TESTING");
     }
 
     @Override
-    public void getSMS() {
-        getAllSms();
+    public void enableBackupButton(boolean enabled) {
+        backupButton.setEnabled(enabled);
     }
 
     //really dirty way of prompting oauth screen
@@ -196,11 +219,10 @@ public class MainActivity extends BaseActivity implements MainView {
                             REQUEST_AUTHORIZATION);
                 }
                 else{
-                    //user is authenticated start the service
-                    Intent serviceIntent = new Intent(getApplicationContext(), BackupService.class);
-                    startService(serviceIntent);
+                   startBackupService();
                 }
             }
         }
     }
+
 }

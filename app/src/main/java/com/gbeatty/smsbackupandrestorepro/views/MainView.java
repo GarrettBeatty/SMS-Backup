@@ -11,5 +11,5 @@ public interface MainView {
 
     void enableBackupButton(boolean enabled);
 
-    void getSMS();
+    void getAllSms();
 }

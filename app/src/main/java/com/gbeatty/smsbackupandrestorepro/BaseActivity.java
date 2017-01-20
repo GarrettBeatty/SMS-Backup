@@ -74,7 +74,7 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
 
 
     public void chooseAccount(boolean settings) {
-        if (EasyPermissions.hasPermissions(this, Manifest.permission.GET_ACCOUNTS, Manifest.permission.READ_SMS,Manifest.permission.READ_CONTACTS)) {
+        if (EasyPermissions.hasPermissions(this, Manifest.permission.GET_ACCOUNTS, Manifest.permission.READ_SMS,Manifest.permission.READ_CONTACTS, Manifest.permission.RECEIVE_BOOT_COMPLETED)) {
             // Start a dialog from which the user can choose an account
             String accountName = PreferenceManager.getDefaultSharedPreferences(this)
                     .getString(PREF_ACCOUNT_NAME, null);
@@ -95,7 +95,7 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
             }
 
         } else {
-            EasyPermissions.requestPermissions(this, "This app needs permission to view SMS, read contact names, and get your Google Account email. More info in the Google Play Store description.", REQUEST_PERMISSION_MULTIPLE, Manifest.permission.GET_ACCOUNTS, Manifest.permission.READ_SMS, Manifest.permission.READ_CONTACTS);
+            EasyPermissions.requestPermissions(this, "This app needs permission to view SMS, read contacts for syncing names with phone numbers, and get your Google Account email. More info in the Google Play Store description.", REQUEST_PERMISSION_MULTIPLE, Manifest.permission.GET_ACCOUNTS, Manifest.permission.READ_SMS, Manifest.permission.READ_CONTACTS, Manifest.permission.RECEIVE_BOOT_COMPLETED);
         }
 
     }
