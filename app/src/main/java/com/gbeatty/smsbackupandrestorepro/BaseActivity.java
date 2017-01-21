@@ -58,7 +58,7 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
      * of the preconditions are not satisfied, the app will prompt the user as
      * appropriate.
      */
-    public void getGoogleAccount(boolean settings) {
+    public void loginGoogle(boolean settings) {
         if (!isGooglePlayServicesAvailable()) {
             acquireGooglePlayServices();
         } else if (!isDeviceOnline()) {
@@ -173,8 +173,6 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
         dialog.show();
     }
 
-    public abstract void signInResult();
-
     /**
      * Called when an activity launched here (specifically, AccountPicker
      * and authorization) exits, giving you the requestCode you started it with,
@@ -195,7 +193,7 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
                 if (resultCode != RESULT_OK) {
                     //TODO Handle
                 }else{
-                    getGoogleAccount(false);
+                    loginGoogle(false);
                 }
                 break;
             case REQUEST_ACCOUNT_PICKER:
@@ -209,7 +207,6 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
                         editor.putString(PREF_ACCOUNT_NAME, accountName);
                         editor.apply();
                         mCredential.setSelectedAccountName(accountName);
-                        signInResult();
                     }
                 }
                 break;

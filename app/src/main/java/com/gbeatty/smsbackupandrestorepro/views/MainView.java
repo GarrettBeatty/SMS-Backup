@@ -11,9 +11,15 @@ public interface MainView {
 
     void enableBackupButton(boolean enabled);
 
-    void getAllSms();
-
     void updateNotification(String text);
 
     void activateNotification(String title, String content);
+
+    void createToast(String text);
+
+    void testOAuth();
+
+    void loginGoogle(boolean b);
+
+    void startBackupService();
 }

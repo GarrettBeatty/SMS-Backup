@@ -31,7 +31,7 @@ public class PreferenceActivity extends BaseActivity implements OnCompleteListen
         account.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                getGoogleAccount(true);
+                loginGoogle(true);
                 return false;
             }
         });
@@ -61,11 +61,6 @@ public class PreferenceActivity extends BaseActivity implements OnCompleteListen
         if (getFragmentManager().findFragmentById(R.id.content_frame) == null) {
             getFragmentManager().beginTransaction().replace(R.id.content_frame, settingsFragment).commit();
         }
-
-    }
-
-    @Override
-    public void signInResult() {
 
     }
 

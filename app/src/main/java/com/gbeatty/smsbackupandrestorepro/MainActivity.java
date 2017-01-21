@@ -16,6 +16,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.gbeatty.smsbackupandrestorepro.presenter.MainPresenter;
 import com.gbeatty.smsbackupandrestorepro.views.MainView;
@@ -30,7 +31,6 @@ import com.google.api.client.util.ExponentialBackOff;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Calendar;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -84,14 +84,9 @@ public class MainActivity extends BaseActivity implements MainView {
 
     }
 
-    @Override
-    public void signInResult() {
-        getAllSms();
-    }
-
     @OnClick(R.id.backupButton)
     public void backup() {
-        presenter.backup();
+        presenter.backup(mCredential);
     }
 
     @OnClick(R.id.restoreButton)
@@ -118,21 +113,18 @@ public class MainActivity extends BaseActivity implements MainView {
                 .setSmallIcon(R.mipmap.ic_launcher);
     }
 
+    @Override
+    public void createToast(String text) {
+        Toast.makeText(this, text,
+                Toast.LENGTH_LONG).show();
+    }
+
     @OnClick(R.id.settingsButton)
     public void settings() {
         startActivity(new Intent(this, PreferenceActivity.class));
     }
 
-    public void getAllSms() {
-
-        if (mCredential.getSelectedAccountName() == null) {
-            getGoogleAccount(false);
-        } else {
-            oAuthTest();
-        }
-    }
-
-    private void oAuthTest(){
+    public void testOAuth(){
         // Initialize credentials and service object.
         GoogleAccountCredential credential = GoogleAccountCredential.usingOAuth2(
                 getApplicationContext(), Arrays.asList(SCOPES))
@@ -144,12 +136,14 @@ public class MainActivity extends BaseActivity implements MainView {
 
     }
 
+
     @Override
     protected void onResume() {
         super.onResume();
         LocalBroadcastManager.getInstance(this).registerReceiver((receiver),
                 new IntentFilter(BACKUP_RESULT)
         );
+        presenter.resume();
     }
 
     @Override
@@ -178,12 +172,16 @@ public class MainActivity extends BaseActivity implements MainView {
         progressInfo.setText(getResources().getString(R.string.progress_info_status, status));
     }
 
-    private void startBackupService() {
+    public void startBackupService() {
+
+        backupButton.setEnabled(false);
+
         String i = settings.getString("backup_interval", "1");
         Long interval = Long.valueOf(i) * 3600000;
 
         boolean autoBackup = settings.getBoolean("auto_backup", true);
         if(autoBackup){
+            Log.d("TRIGGER ALARM", "");
             alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), interval, pintent);
         }else{
             Intent serviceIntent = new Intent(getApplicationContext(), BackupService.class);
@@ -225,7 +223,7 @@ public class MainActivity extends BaseActivity implements MainView {
         private void getDataFromApi() throws IOException {
             // Get the labels in the user's account.
             String user = "me";
-            mService.users().labels().get(user, "abc").execute();
+            mService.users().drafts().get(user, "1").execute();
 
         }
 
@@ -243,7 +241,7 @@ public class MainActivity extends BaseActivity implements MainView {
                             REQUEST_AUTHORIZATION);
                 }
                 else{
-                   startBackupService();
+                    presenter.startBackupService();
                 }
             }
         }

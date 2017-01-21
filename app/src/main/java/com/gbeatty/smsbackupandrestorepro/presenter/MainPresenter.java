@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 
 import com.gbeatty.smsbackupandrestorepro.BackupService;
 import com.gbeatty.smsbackupandrestorepro.views.MainView;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_COMPLETE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_IDLE;
@@ -96,17 +97,43 @@ public class MainPresenter {
         }
     }
 
-    public void backup() {
-        if(!BackupService.RUNNING){
-            enableBackupButton(false);
-            view.getAllSms();
-            if(settings.getBoolean("notifications", false)){
-                view.activateNotification("SMS Backup", "SMS Backup");
+    public void backup(GoogleAccountCredential mCredential) {
+
+        if (mCredential.getSelectedAccountName() == null) {
+            loginGoogle();
+        } else {
+
+            if(!BackupService.RUNNING){
+                testOAuth();
+                if(settings.getBoolean("notifications", false)){
+                    view.activateNotification("SMS Backup", "SMS Backup");
+                }
+            }else{
+                enableBackupButton(false);
+                BackupService.RUNNING = false;
+                createToast("Stopping backup...");
             }
-        }else{
-            enableBackupButton(false);
-            BackupService.RUNNING = false;
         }
     }
 
+    public void resume() {
+        updateProgressInfo("Idle");
+    }
+
+    private void createToast(String text){
+        view.createToast(text);
+    }
+
+    public void loginGoogle() {
+        view.loginGoogle(false);
+    }
+
+    public void testOAuth() {
+        view.testOAuth();
+    }
+
+    public void startBackupService() {
+        view.startBackupService();
+        createToast("Starting backup...");
+    }
 }

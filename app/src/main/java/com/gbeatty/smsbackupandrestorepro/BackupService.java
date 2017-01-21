@@ -1,7 +1,5 @@
 package com.gbeatty.smsbackupandrestorepro;
 
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -13,8 +11,8 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
@@ -34,7 +32,6 @@ import java.util.List;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import static android.R.attr.id;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_COMPLETE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_IDLE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_MESSAGE;
@@ -48,7 +45,6 @@ import static com.gbeatty.smsbackupandrestorepro.Utils.createEmail;
 import static com.gbeatty.smsbackupandrestorepro.Utils.createLabelIfNotExistAndGetLabelID;
 import static com.gbeatty.smsbackupandrestorepro.Utils.getThreadsWithLabelsQuery;
 import static com.gbeatty.smsbackupandrestorepro.Utils.insertMessage;
-import static com.google.common.util.concurrent.Service.State.STARTING;
 
 public class BackupService extends Service {
 
@@ -231,6 +227,7 @@ public class BackupService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d("SERVICE STARTED", "WOOH");
         performOnBackgroundThread(new Runnable() {
             @Override
             public void run() {

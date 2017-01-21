@@ -16,7 +16,7 @@
         android:id="@+id/progress_info"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/progress_info_blank" />
+        />
 
     <me.zhanghai.android.materialprogressbar.MaterialProgressBar
         android:id="@+id/progress"
