@@ -1,36 +1,21 @@
 package com.gbeatty.smsbackupandrestorepro;
 
 import android.app.AlarmManager;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.gbeatty.smsbackupandrestorepro.presenter.MainPresenter;
 import com.gbeatty.smsbackupandrestorepro.views.MainView;
-import com.google.api.client.extensions.android.http.AndroidHttp;
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
-import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
-import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.util.ExponentialBackOff;
-
-import java.io.IOException;
-import java.util.Arrays;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -38,9 +23,6 @@ import butterknife.OnClick;
 import me.zhanghai.android.materialprogressbar.MaterialProgressBar;
 
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_RESULT;
-import static com.gbeatty.smsbackupandrestorepro.Utils.PREF_ACCOUNT_NAME;
-import static com.gbeatty.smsbackupandrestorepro.Utils.REQUEST_AUTHORIZATION;
-import static com.gbeatty.smsbackupandrestorepro.Utils.SCOPES;
 
 public class MainActivity extends BaseActivity implements MainView {
 

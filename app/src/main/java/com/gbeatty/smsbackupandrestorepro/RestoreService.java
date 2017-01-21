@@ -2,7 +2,6 @@ package com.gbeatty.smsbackupandrestorepro;
 
 
 import android.app.Service;
-import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -10,7 +9,6 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
@@ -18,20 +16,13 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ExponentialBackOff;
-import com.google.api.services.gmail.model.Message;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
-import static com.gbeatty.smsbackupandrestorepro.BackupService.performOnBackgroundThread;
-import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_IDLE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_MESSAGE;
-import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_RESULT;
 import static com.gbeatty.smsbackupandrestorepro.Utils.PREF_ACCOUNT_NAME;
 import static com.gbeatty.smsbackupandrestorepro.Utils.RESTORE_IDLE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.RESTORE_RESULT;
