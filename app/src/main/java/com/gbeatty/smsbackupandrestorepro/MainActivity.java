@@ -100,19 +100,6 @@ public class MainActivity extends BaseActivity implements MainView {
         startActivity(new Intent(this, PreferenceActivity.class));
     }
 
-    public void testOAuth(){
-        // Initialize credentials and service object.
-        GoogleAccountCredential credential = GoogleAccountCredential.usingOAuth2(
-                getApplicationContext(), Arrays.asList(SCOPES))
-                .setBackOff(new ExponentialBackOff());
-
-        String account = settings.getString(PREF_ACCOUNT_NAME, null);
-        credential.setSelectedAccountName(account);
-        new TestOAuth(credential).execute();
-
-    }
-
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -163,57 +150,4 @@ public class MainActivity extends BaseActivity implements MainView {
     public void enableBackupButton(boolean enabled) {
         backupButton.setEnabled(enabled);
     }
-
-    //really dirty way of prompting oauth screen
-    private class TestOAuth extends AsyncTask<Void, Void, Void> {
-        private com.google.api.services.gmail.Gmail mService = null;
-        private Exception mLastError = null;
-
-        TestOAuth(GoogleAccountCredential credential) {
-            HttpTransport transport = AndroidHttp.newCompatibleTransport();
-            JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
-            mService = new com.google.api.services.gmail.Gmail.Builder(
-                    transport, jsonFactory, credential)
-                    .setApplicationName("Gmail API Android Quickstart")
-                    .build();
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            try {
-                getDataFromApi();
-            } catch (Exception e) {
-                mLastError = e;
-                cancel(true);
-            }
-            return null;
-
-        }
-
-        private void getDataFromApi() throws IOException {
-            // Get the labels in the user's account.
-            String user = "me";
-            mService.users().drafts().get(user, "1").execute();
-        }
-
-        @Override
-        protected void onCancelled() {
-
-            if (mLastError != null) {
-                if (mLastError instanceof GooglePlayServicesAvailabilityIOException) {
-                    showGooglePlayServicesAvailabilityErrorDialog(
-                            ((GooglePlayServicesAvailabilityIOException) mLastError)
-                                    .getConnectionStatusCode());
-                } else if (mLastError instanceof UserRecoverableAuthIOException) {
-                    startActivityForResult(
-                            ((UserRecoverableAuthIOException) mLastError).getIntent(),
-                            REQUEST_AUTHORIZATION);
-                }
-                else{
-                    presenter.startBackupService();
-                }
-            }
-        }
-    }
-
 }

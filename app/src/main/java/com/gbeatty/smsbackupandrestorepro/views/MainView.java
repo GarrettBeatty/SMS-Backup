@@ -13,8 +13,6 @@ public interface MainView {
 
     void createToast(String text);
 
-    void testOAuth();
-
     void loginGoogle(boolean b);
 
     void startBackupService(Long interval);

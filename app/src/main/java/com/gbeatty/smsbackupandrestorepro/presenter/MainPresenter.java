@@ -84,8 +84,7 @@ public class MainPresenter {
         } else {
 
             if(!BackupService.RUNNING){
-                createToast("Authenticating...");
-                testOAuth();
+                startBackupService();
             }else{
                 enableBackupButton(false);
                 BackupService.RUNNING = false;
@@ -104,10 +103,6 @@ public class MainPresenter {
 
     public void loginGoogle() {
         view.loginGoogle(false);
-    }
-
-    public void testOAuth() {
-        view.testOAuth();
     }
 
     public void startBackupService() {

@@ -14,6 +14,7 @@ import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
@@ -76,6 +77,8 @@ public class BackupService extends Service {
     private NotificationManager mNotificationManager = null;
     private NotificationCompat.Builder mNotifyBuilder = null;
     private int notifyID = 1;
+    private String[] labelIDs;
+
 
     public static boolean RUNNING = false;
 
@@ -97,6 +100,7 @@ public class BackupService extends Service {
 
         labelName = settings.getString("gmail_label", "sms");
 
+
         transport = AndroidHttp.newCompatibleTransport();
         jsonFactory = JacksonFactory.getDefaultInstance();
         mService = new com.google.api.services.gmail.Gmail.Builder(
@@ -105,8 +109,8 @@ public class BackupService extends Service {
                 .build();
 
         broadcaster = LocalBroadcastManager.getInstance(this);
-        getValuesFromSharedPrefs();
-
+        contacts = new HashMap<>(200);
+        getContactName();
     }
 
     @Nullable
@@ -117,7 +121,6 @@ public class BackupService extends Service {
 
     private void handleParsing(String address, String msg, String date, String name, String folder, int count, int totalSMS) throws IOException, MessagingException {
 
-        String[] labelIDs = {createLabelIfNotExistAndGetLabelID(mService, user, labelName)};
         String subject = "SMS with " + name;
         String query = "subject:" + subject;
 
@@ -151,25 +154,10 @@ public class BackupService extends Service {
 
     }
 
-    private void getValuesFromSharedPrefs()
-    {
 
-        String contactsString = settings.getString("contacts", null);
-        Gson gson = new Gson();
-        java.lang.reflect.Type type = new TypeToken<HashMap<String, String>>(){}.getType();
-
-        if(contactsString == null)
-            contacts = new HashMap<>(20);
-        else{
-            contacts = gson.fromJson(contactsString, type);
-        }
-    }
     private void saveValuesToSharedPrefs(){
         SharedPreferences.Editor editor = settings.edit();
         editor.putLong("last_date", tempLastDate);
-
-        Gson gson = new Gson();
-        editor.putString("contacts", gson.toJson(contacts));
         editor.apply();
     }
 
@@ -201,6 +189,9 @@ public class BackupService extends Service {
     }
 
     private int handleBackup() throws IOException, MessagingException {
+
+        labelIDs = new String[]{createLabelIfNotExistAndGetLabelID(mService, user, labelName)};
+
         RUNNING = true;
         updateProgress(0,0, BACKUP_STARTING);
         BigInteger lastDate = BigInteger.valueOf(tempLastDate);
@@ -225,7 +216,7 @@ public class BackupService extends Service {
                 String msg = c.getString(c.getColumnIndexOrThrow("body"));
                 String date = c.getString(c.getColumnIndexOrThrow("date"));
                 String folder;
-                String name = getContactName(this, address);
+                String name = contacts.get(address);
                 if(name == null) name = address;
                 if (c.getString(c.getColumnIndexOrThrow("type")).contains("1")) {
                     folder = "inbox";
@@ -245,28 +236,27 @@ public class BackupService extends Service {
         return BACKUP_COMPLETE;
     }
 
-    public String getContactName(Context context, String phoneNumber) {
+    private void getContactName() {
 
-        if(contacts.containsKey(phoneNumber)) return contacts.get(phoneNumber);
+        Cursor managedCursor = getContentResolver()
+                .query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        new String[] {ContactsContract.CommonDataKinds.Phone._ID, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, ContactsContract.CommonDataKinds.Phone.NUMBER}, null, null,  ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC");
 
-        ContentResolver cr = context.getContentResolver();
-        Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
-                Uri.encode(phoneNumber));
-        Cursor cursor = cr.query(uri,
-                new String[] { ContactsContract.PhoneLookup.DISPLAY_NAME }, null, null, null);
-        if (cursor == null) {
-            return null;
+        if(managedCursor != null && managedCursor.getCount() > 0){
+            managedCursor.moveToFirst();
+            int total = managedCursor.getCount();
+            for(int i = 0; i < total; i++){
+                String number = managedCursor.getString(managedCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                String name = managedCursor.getString(managedCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                String phNo = number.replaceAll("[()\\-\\s]", "").trim();
+
+                contacts.put(phNo, name);
+                managedCursor.moveToNext();
+            }
+            managedCursor.close();
         }
-        String contactName = null;
-        if (cursor.moveToFirst()) {
-            contactName = cursor.getString(cursor
-                    .getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME));
-        }
-        if (cursor != null && !cursor.isClosed()) {
-            cursor.close();
-        }
-        contacts.put(phoneNumber, contactName);
-        return contactName;
+
+
     }
 
     private void stopOnError(){
