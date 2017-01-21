@@ -1,5 +1,6 @@
 package com.gbeatty.smsbackupandrestorepro;
 
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -11,8 +12,8 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
@@ -20,18 +21,25 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ExponentialBackOff;
+import com.google.api.services.gmail.model.Message;
 import com.google.api.services.gmail.model.Thread;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import static android.R.attr.type;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_COMPLETE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_IDLE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_MESSAGE;
@@ -61,9 +69,15 @@ public class BackupService extends Service {
     private LocalBroadcastManager broadcaster;
     private String user = "me";
 
-    private HashMap<String, String> threadIDs;
-    private HashMap<String, String> contacts;
-    public static boolean RUNNING;
+    private Map<String, String> contacts;
+
+    private Long tempLastDate = Long.MIN_VALUE;
+
+    private NotificationManager mNotificationManager = null;
+    private NotificationCompat.Builder mNotifyBuilder = null;
+    private int notifyID = 1;
+
+    public static boolean RUNNING = false;
 
     @Override
     public void onCreate() {
@@ -83,9 +97,6 @@ public class BackupService extends Service {
 
         labelName = settings.getString("gmail_label", "sms");
 
-        contacts = new HashMap<>(200);
-        threadIDs = new HashMap<>(200);
-
         transport = AndroidHttp.newCompatibleTransport();
         jsonFactory = JacksonFactory.getDefaultInstance();
         mService = new com.google.api.services.gmail.Gmail.Builder(
@@ -94,6 +105,7 @@ public class BackupService extends Service {
                 .build();
 
         broadcaster = LocalBroadcastManager.getInstance(this);
+        getValuesFromSharedPrefs();
 
     }
 
@@ -111,14 +123,9 @@ public class BackupService extends Service {
 
         String threadID = null;
 
-        if(threadIDs.containsKey(subject)){
-            threadID = threadIDs.get(subject);
-        }else{
-            List<Thread> threads = getThreadsWithLabelsQuery(mService, user, query, labelIDs);
-            if(threads.size() > 0){
-                threadID = threads.get(0).getId();
-                threadIDs.put(subject, threadID);
-            }
+        List<Thread> threads = getThreadsWithLabelsQuery(mService, user, query, labelIDs);
+        if(threads.size() > 0){
+            threadID = threads.get(0).getId();
         }
 
         String from;
@@ -138,12 +145,32 @@ public class BackupService extends Service {
         MimeMessage email = createEmail(to, from, personal, subject, msg, new Date(Long.valueOf(date)));
         insertMessage(mService, user, email, threadID, labelIDs);
 
+        tempLastDate = Long.valueOf(date);
+
         updateProgress(count, totalSMS, BACKUP_RUNNING);
 
-        SharedPreferences.Editor editor = settings.edit();
-        editor.putLong("last_date", Long.valueOf(date));
-        editor.apply();
+    }
 
+    private void getValuesFromSharedPrefs()
+    {
+
+        String contactsString = settings.getString("contacts", null);
+        Gson gson = new Gson();
+        java.lang.reflect.Type type = new TypeToken<HashMap<String, String>>(){}.getType();
+
+        if(contactsString == null)
+            contacts = new HashMap<>(20);
+        else{
+            contacts = gson.fromJson(contactsString, type);
+        }
+    }
+    private void saveValuesToSharedPrefs(){
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putLong("last_date", tempLastDate);
+
+        Gson gson = new Gson();
+        editor.putString("contacts", gson.toJson(contacts));
+        editor.apply();
     }
 
     private void updateProgress(int current, int total, int status){
@@ -152,13 +179,31 @@ public class BackupService extends Service {
         intent.putExtra(BACKUP_MESSAGE, message);
         broadcaster.sendBroadcast(intent);
 
+        if(!settings.getBoolean("notifications", false)) return;
+
+        switch (status){
+            case BACKUP_STARTING:
+                updateNotification("Progress: Starting...");
+                break;
+            case BACKUP_RUNNING:
+                updateNotification("" + current + " out of " + total + " SMS backed up");
+                break;
+            case BACKUP_STOPPING:
+                updateNotification("Progress: Stopping...");
+                break;
+            case BACKUP_COMPLETE:
+                updateNotification("Progress: Complete");
+                break;
+            case BACKUP_IDLE:
+                updateNotification("Progress: Idle");
+        }
+
     }
 
-    private void handleBackup() throws IOException, MessagingException {
+    private int handleBackup() throws IOException, MessagingException {
         RUNNING = true;
         updateProgress(0,0, BACKUP_STARTING);
-        Long l = settings.getLong("last_date", Long.MIN_VALUE);
-        BigInteger lastDate = BigInteger.valueOf(l);
+        BigInteger lastDate = BigInteger.valueOf(tempLastDate);
 
         ContentResolver resolver = getContentResolver();
         String query = "CAST(date as BIGINT) > " + lastDate + "";
@@ -168,13 +213,11 @@ public class BackupService extends Service {
             c.moveToFirst();
             int totalSMS = c.getCount();
             int count = 0;
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < totalSMS; i++) {
 
                 if(!RUNNING){
-                    updateProgress(0,0,BACKUP_STOPPING);
-                    updateProgress(0,0,BACKUP_IDLE);
                     c.close();
-                    return;
+                    return BACKUP_IDLE;
                 }
 
                 String address = c.getString(c
@@ -196,9 +239,10 @@ public class BackupService extends Service {
                 c.moveToNext();
             }
             RUNNING = false;
-            updateProgress(0,0,BACKUP_COMPLETE);
             c.close();
+            return BACKUP_COMPLETE;
         }
+        return BACKUP_COMPLETE;
     }
 
     public String getContactName(Context context, String phoneNumber) {
@@ -225,21 +269,53 @@ public class BackupService extends Service {
         return contactName;
     }
 
+    private void stopOnError(){
+        RUNNING = false;
+        updateProgress(0,0,BACKUP_IDLE);
+        stopSelf();
+    }
+
+    public void updateNotification(String text){
+
+        if(mNotificationManager == null || mNotifyBuilder == null){
+            mNotificationManager =
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+// Sets an ID for the notification, so it can be updated
+            mNotifyBuilder = new NotificationCompat.Builder(this)
+                    .setContentTitle("SMS Backup and Restore Pro")
+                    .setContentText("")
+                    .setSmallIcon(R.mipmap.ic_launcher);
+        }
+
+        mNotifyBuilder.setContentText(text);
+        // Because the ID remains unchanged, the existing notification is
+        // updated.
+        mNotificationManager.notify(
+                notifyID,
+                mNotifyBuilder.build());
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        saveValuesToSharedPrefs();
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d("SERVICE STARTED", "WOOH");
         performOnBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    handleBackup();
+                    int status = handleBackup();
+                    saveValuesToSharedPrefs();
+                    updateProgress(0,0,status);
+                    stopSelf();
                 } catch (IOException e) {
-                    RUNNING = false;
-                    updateProgress(0,0,BACKUP_IDLE);
+                    stopOnError();
                     e.printStackTrace();
                 } catch (MessagingException e) {
-                    RUNNING = false;
-                    updateProgress(0,0,BACKUP_IDLE);
+                    stopOnError();
                     e.printStackTrace();
                 }
             }

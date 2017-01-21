@@ -1,15 +1,19 @@
 package com.gbeatty.smsbackupandrestorepro;
 
 
+import android.util.Log;
+
 import com.google.api.client.util.Base64;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.Label;
 import com.google.api.services.gmail.model.ListLabelsResponse;
+import com.google.api.services.gmail.model.ListMessagesResponse;
 import com.google.api.services.gmail.model.ListThreadsResponse;
 import com.google.api.services.gmail.model.Message;
 import com.google.api.services.gmail.model.Thread;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -24,6 +28,8 @@ import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import static android.R.id.message;
+
 public class Utils {
 
     static final int REQUEST_ACCOUNT_PICKER = 1000;
@@ -37,8 +43,18 @@ public class Utils {
     public static final int BACKUP_STOPPING = 3;
     public static final int BACKUP_RUNNING = 4;
 
+    public static final int RESTORE_IDLE = 0;
+    public static final int RESTORE_COMPLETE = 1;
+    public static final int RESTORE_STARTING = 2;
+    public static final int RESTORE_STOPPING = 3;
+    public static final int RESTORE_RUNNING = 4;
+
     public static final String BACKUP_RESULT = "com.gbeatty.smsbackupandrestorepro.BackupService.REQUEST_PROCESSED";
     public static final String BACKUP_MESSAGE = "com.gbeatty.smsbackupandrestorepro.BackupService.BACKUP_MSG";
+
+    public static final String RESTORE_RESULT = "com.gbeatty.smsbackupandrestorepro.BackupService.RESTORE_PROCESSED";
+    public static final String RESTORE_MESSAGE = "com.gbeatty.smsbackupandrestorepro.BackupService.RESTORE_MSG";
+
 
     static final String PREF_ACCOUNT_NAME = "accountName";
     static final String[] SCOPES = {GmailScopes.GMAIL_LABELS, GmailScopes.GMAIL_MODIFY};
@@ -152,6 +168,7 @@ public class Utils {
         email.setSubject(subject);
         email.setText(bodyText);
         email.setSentDate(sentDate);
+
         return email;
     }
 
@@ -173,4 +190,5 @@ public class Utils {
         message.setRaw(encodedEmail);
         return message;
     }
+
 }

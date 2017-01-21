@@ -58,11 +58,6 @@ public class MainActivity extends BaseActivity implements MainView {
     private AlarmManager alarm;
     private SharedPreferences settings;
 
-
-    private NotificationManager mNotificationManager = null;
-    private NotificationCompat.Builder mNotifyBuilder = null;
-    private int notifyID = 1;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -92,25 +87,6 @@ public class MainActivity extends BaseActivity implements MainView {
     @OnClick(R.id.restoreButton)
     public void restore() {
 
-    }
-
-    public void updateNotification(String text){
-        mNotifyBuilder.setContentText(text);
-        // Because the ID remains unchanged, the existing notification is
-        // updated.
-        mNotificationManager.notify(
-                notifyID,
-                mNotifyBuilder.build());
-    }
-
-    public void activateNotification(String title, String content){
-        mNotificationManager =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-// Sets an ID for the notification, so it can be updated
-        mNotifyBuilder = new NotificationCompat.Builder(this)
-                .setContentTitle(title)
-                .setContentText(content)
-                .setSmallIcon(R.mipmap.ic_launcher);
     }
 
     @Override
@@ -172,20 +148,14 @@ public class MainActivity extends BaseActivity implements MainView {
         progressInfo.setText(getResources().getString(R.string.progress_info_status, status));
     }
 
-    public void startBackupService() {
+    public void startBackupService(Long interval) {
 
-        backupButton.setEnabled(false);
-
-        String i = settings.getString("backup_interval", "1");
-        Long interval = Long.valueOf(i) * 3600000;
+        Intent serviceIntent = new Intent(getApplicationContext(), BackupService.class);
+        startService(serviceIntent);
 
         boolean autoBackup = settings.getBoolean("auto_backup", true);
         if(autoBackup){
-            Log.d("TRIGGER ALARM", "");
-            alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), interval, pintent);
-        }else{
-            Intent serviceIntent = new Intent(getApplicationContext(), BackupService.class);
-            startService(serviceIntent);
+            alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + interval, interval, pintent);
         }
     }
 
@@ -224,7 +194,6 @@ public class MainActivity extends BaseActivity implements MainView {
             // Get the labels in the user's account.
             String user = "me";
             mService.users().drafts().get(user, "1").execute();
-
         }
 
         @Override

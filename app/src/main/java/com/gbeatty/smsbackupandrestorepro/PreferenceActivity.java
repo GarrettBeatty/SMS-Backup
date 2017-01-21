@@ -2,9 +2,13 @@ package com.gbeatty.smsbackupandrestorepro;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.CheckBoxPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceGroup;
@@ -146,6 +150,19 @@ public class PreferenceActivity extends BaseActivity implements OnCompleteListen
                 }
                 pref.setSummary(listPreference.getEntry() + " most recent messages");
             }
+
+            if(pref instanceof CheckBoxPreference){
+                CheckBoxPreference checkBoxPreference = (CheckBoxPreference) pref;
+                if(checkBoxPreference.getKey().equals("auto_backup")){
+                    if(!checkBoxPreference.isChecked()){
+                        Intent intent = new Intent(getActivity(), BackupService.class);
+                        PendingIntent pintent = PendingIntent.getService(getActivity(), 0, intent, 0);
+                        AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(ALARM_SERVICE);
+                        alarmManager.cancel(pintent);
+                    }
+                }
+            }
+
         }
 
         @Override

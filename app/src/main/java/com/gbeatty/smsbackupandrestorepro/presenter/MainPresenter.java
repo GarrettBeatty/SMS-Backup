@@ -54,7 +54,6 @@ public class MainPresenter {
             updateProgressInfo("Idle");
         }
 
-        if(settings.getBoolean("notifications", false)) updateNotification(count, total, status);
         enableBackupButton(true);
     }
 
@@ -78,25 +77,6 @@ public class MainPresenter {
         view.enableBackupButton(enabled);
     }
 
-    private void updateNotification(int count, int total, int status){
-        switch (status){
-            case BACKUP_STARTING:
-                view.updateNotification("Progress: Starting...");
-                break;
-            case BACKUP_RUNNING:
-                view.updateNotification("" + count + " out of " + total + " SMS backed up");
-                break;
-            case BACKUP_STOPPING:
-                view.updateNotification("Progress: Stopping...");
-                break;
-            case BACKUP_COMPLETE:
-                view.updateNotification("Progress: Complete");
-                break;
-            case BACKUP_IDLE:
-                view.updateNotification("Progress: Idle");
-        }
-    }
-
     public void backup(GoogleAccountCredential mCredential) {
 
         if (mCredential.getSelectedAccountName() == null) {
@@ -104,10 +84,8 @@ public class MainPresenter {
         } else {
 
             if(!BackupService.RUNNING){
+                createToast("Authenticating...");
                 testOAuth();
-                if(settings.getBoolean("notifications", false)){
-                    view.activateNotification("SMS Backup", "SMS Backup");
-                }
             }else{
                 enableBackupButton(false);
                 BackupService.RUNNING = false;
@@ -133,7 +111,10 @@ public class MainPresenter {
     }
 
     public void startBackupService() {
-        view.startBackupService();
         createToast("Starting backup...");
+        String i = settings.getString("backup_interval", "1");
+        Long interval = Long.valueOf(i) * 3600000;
+        enableBackupButton(false);
+        view.startBackupService(interval);
     }
 }

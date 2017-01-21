@@ -95,11 +95,10 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
             }
 
         } else {
-            EasyPermissions.requestPermissions(this, "This app needs permission to view SMS, read contacts for syncing names with phone numbers, and get your Google Account email. More info in the Google Play Store description.", REQUEST_PERMISSION_MULTIPLE, Manifest.permission.GET_ACCOUNTS, Manifest.permission.READ_SMS, Manifest.permission.READ_CONTACTS, Manifest.permission.RECEIVE_BOOT_COMPLETED);
+            EasyPermissions.requestPermissions(this, "Check Google Play Store Description for details on permissions and why this app needs them.", REQUEST_PERMISSION_MULTIPLE, Manifest.permission.GET_ACCOUNTS, Manifest.permission.READ_SMS, Manifest.permission.READ_CONTACTS, Manifest.permission.RECEIVE_BOOT_COMPLETED);
         }
 
     }
-
 
 
     /**
