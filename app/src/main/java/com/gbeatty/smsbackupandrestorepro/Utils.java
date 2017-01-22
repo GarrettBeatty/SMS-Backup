@@ -1,6 +1,8 @@
 package com.gbeatty.smsbackupandrestorepro;
 
 
+import android.content.Context;
+
 import com.google.api.client.util.Base64;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
@@ -12,6 +14,7 @@ import com.google.api.services.gmail.model.Thread;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -70,6 +73,31 @@ public class Utils {
         }
 
         return label.getId();
+    }
+
+    public static String loadJSONFromAsset(Context context, String fileName) {
+        String json = null;
+        try {
+
+            InputStream is = context.getAssets().open(fileName);
+
+            int size = is.available();
+
+            byte[] buffer = new byte[size];
+
+            is.read(buffer);
+
+            is.close();
+
+            json = new String(buffer, "UTF-8");
+
+
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return null;
+        }
+        return json;
+
     }
 
     /**

@@ -26,7 +26,6 @@ import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_RESULT;
 
 public class MainActivity extends BaseActivity implements MainView {
 
-
     @BindView(R.id.progress_info)
     TextView progressInfo;
     @BindView(R.id.progress)
@@ -62,8 +61,8 @@ public class MainActivity extends BaseActivity implements MainView {
     }
 
     @OnClick(R.id.backupButton)
-    public void backup() {
-        presenter.backup(mCredential);
+    public void backup(){
+        presenter.oauth(mCredential);
     }
 
     @OnClick(R.id.restoreButton)

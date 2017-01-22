@@ -14,7 +14,7 @@ import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_RUNNING;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_STARTING;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_STOPPING;
 
-public class MainPresenter {
+public class MainPresenter{
 
     private MainView view;
     private SharedPreferences settings;
@@ -77,19 +77,22 @@ public class MainPresenter {
         view.enableBackupButton(enabled);
     }
 
-    public void backup(GoogleAccountCredential mCredential) {
+    public void oauth(GoogleAccountCredential mCredential) {
 
         if (mCredential.getSelectedAccountName() == null) {
             loginGoogle();
         } else {
+           backup();
+        }
+    }
 
-            if(!BackupService.RUNNING){
-                startBackupService();
-            }else{
-                enableBackupButton(false);
-                BackupService.RUNNING = false;
-                createToast("Stopping backup...");
-            }
+    public void backup(){
+        if(!BackupService.RUNNING){
+            startBackupService();
+        }else{
+            enableBackupButton(false);
+            BackupService.RUNNING = false;
+            createToast("Stopping backup...");
         }
     }
 

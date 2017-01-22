@@ -1,6 +1,6 @@
 package com.gbeatty.smsbackupandrestorepro;
 
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 import static junit.framework.Assert.assertEquals;
 

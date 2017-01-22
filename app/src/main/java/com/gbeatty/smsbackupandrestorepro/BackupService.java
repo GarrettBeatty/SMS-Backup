@@ -17,6 +17,7 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -183,7 +184,7 @@ public class BackupService extends Service {
 
     private int handleBackup() throws IOException, MessagingException {
 
-        labelIDs = new String[]{createLabelIfNotExistAndGetLabelID(mService, user, labelName)};
+            labelIDs = new String[]{createLabelIfNotExistAndGetLabelID(mService, user, labelName)};
 
         RUNNING = true;
         updateProgress(0,0, BACKUP_STARTING);
@@ -294,6 +295,9 @@ public class BackupService extends Service {
                     saveValuesToSharedPrefs();
                     updateProgress(0,0,status);
                     stopSelf();
+                } catch (UserRecoverableAuthIOException e) {
+                    startActivity(e.getIntent().setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                    stopOnError();
                 } catch (IOException e) {
                     stopOnError();
                     e.printStackTrace();

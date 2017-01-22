@@ -206,6 +206,7 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
                         editor.putString(PREF_ACCOUNT_NAME, accountName);
                         editor.apply();
                         mCredential.setSelectedAccountName(accountName);
+
                     }
                 }
                 break;
