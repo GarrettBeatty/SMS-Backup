@@ -14,41 +14,40 @@ import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_RUNNING;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_STARTING;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_STOPPING;
 
-public class MainPresenter{
+public class MainPresenter {
 
     private MainView view;
     private SharedPreferences settings;
 
-    public MainPresenter(MainView view, SharedPreferences settings){
+    public MainPresenter(MainView view, SharedPreferences settings) {
         this.view = view;
         this.settings = settings;
     }
 
-    public void handleBackupReceiver(Intent intent){
+    public void handleBackupReceiver(Intent intent) {
         int[] message = intent.getIntArrayExtra(BACKUP_MESSAGE);
         int count = message[0];
         int total = message[1];
         int status = message[2];
 
-        if(status == BACKUP_RUNNING){
+        if (status == BACKUP_RUNNING) {
             int percent = 0;
-            if(total != 0){
+            if (total != 0) {
                 percent = (100 * count) / total;
             }
             updateProgressInfo(count, total);
             updateProgressBar(percent);
             updateBackupButtonText("Stop Backup");
 
-        }
-        else if(status == BACKUP_COMPLETE){
+        } else if (status == BACKUP_COMPLETE) {
             updateBackupButtonText("Backup");
             updateProgressBar(0);
             updateProgressInfo("Complete");
-        }else if(status == BACKUP_STARTING) {
+        } else if (status == BACKUP_STARTING) {
             updateProgressInfo("Starting...");
-        }else if(status == BACKUP_STOPPING) {
+        } else if (status == BACKUP_STOPPING) {
             updateProgressInfo("Stopping...");
-        }else if(status == BACKUP_IDLE){
+        } else if (status == BACKUP_IDLE) {
             updateBackupButtonText("Backup");
             updateProgressBar(0);
             updateProgressInfo("Idle");
@@ -57,23 +56,23 @@ public class MainPresenter{
         enableBackupButton(true);
     }
 
-    private void updateProgressInfo(int count, int total){
+    private void updateProgressInfo(int count, int total) {
         view.updateProgressInfo(count, total);
     }
 
-    private void updateProgressInfo(String status){
+    private void updateProgressInfo(String status) {
         view.updateProgressInfo(status);
     }
 
-    private void updateProgressBar(int percent){
+    private void updateProgressBar(int percent) {
         view.updateProgressBar(percent);
     }
 
-    private void updateBackupButtonText(String text){
+    private void updateBackupButtonText(String text) {
         view.updateBackupButtonText(text);
     }
 
-    private void enableBackupButton(boolean enabled){
+    private void enableBackupButton(boolean enabled) {
         view.enableBackupButton(enabled);
     }
 
@@ -82,14 +81,14 @@ public class MainPresenter{
         if (mCredential.getSelectedAccountName() == null) {
             loginGoogle();
         } else {
-           backup();
+            backup();
         }
     }
 
-    public void backup(){
-        if(!BackupService.RUNNING){
+    public void backup() {
+        if (!BackupService.RUNNING) {
             startBackupService();
-        }else{
+        } else {
             enableBackupButton(false);
             BackupService.RUNNING = false;
             createToast("Stopping backup...");
@@ -100,7 +99,7 @@ public class MainPresenter{
         updateProgressInfo("Idle");
     }
 
-    private void createToast(String text){
+    private void createToast(String text) {
         view.createToast(text);
     }
 

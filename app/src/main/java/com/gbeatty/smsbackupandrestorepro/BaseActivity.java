@@ -74,7 +74,7 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
 
 
     public void chooseAccount(boolean settings) {
-        if (EasyPermissions.hasPermissions(this, Manifest.permission.GET_ACCOUNTS, Manifest.permission.READ_SMS,Manifest.permission.READ_CONTACTS, Manifest.permission.RECEIVE_BOOT_COMPLETED)) {
+        if (EasyPermissions.hasPermissions(this, Manifest.permission.GET_ACCOUNTS, Manifest.permission.READ_SMS, Manifest.permission.READ_CONTACTS, Manifest.permission.RECEIVE_BOOT_COMPLETED)) {
             // Start a dialog from which the user can choose an account
             String accountName = PreferenceManager.getDefaultSharedPreferences(this)
                     .getString(PREF_ACCOUNT_NAME, null);
@@ -191,7 +191,7 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
             case REQUEST_GOOGLE_PLAY_SERVICES:
                 if (resultCode != RESULT_OK) {
                     //TODO Handle
-                }else{
+                } else {
                     loginGoogle(false);
                 }
                 break;

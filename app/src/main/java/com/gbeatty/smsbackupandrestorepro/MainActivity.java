@@ -30,9 +30,9 @@ public class MainActivity extends BaseActivity implements MainView {
     TextView progressInfo;
     @BindView(R.id.progress)
     MaterialProgressBar progressBar;
-    private BroadcastReceiver receiver;
     @BindView(R.id.backupButton)
     Button backupButton;
+    private BroadcastReceiver receiver;
     private MainPresenter presenter;
     private Intent intent;
     private PendingIntent pintent;
@@ -56,12 +56,12 @@ public class MainActivity extends BaseActivity implements MainView {
 
         intent = new Intent(this, BackupService.class);
         pintent = PendingIntent.getService(this, 0, intent, 0);
-        alarm = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+        alarm = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
     }
 
     @OnClick(R.id.backupButton)
-    public void backup(){
+    public void backup() {
         presenter.oauth(mCredential);
     }
 
@@ -122,7 +122,7 @@ public class MainActivity extends BaseActivity implements MainView {
         startService(serviceIntent);
 
         boolean autoBackup = settings.getBoolean("auto_backup", true);
-        if(autoBackup){
+        if (autoBackup) {
             alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + interval, interval, pintent);
         }
     }

@@ -17,7 +17,7 @@ public class DeviceBootReceiver extends BroadcastReceiver {
 
             SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
             boolean autoBackup = settings.getBoolean("auto_backup", true);
-            if(!autoBackup) return;
+            if (!autoBackup) return;
 
             /* Setting the alarm here */
             Intent alarmIntent = new Intent(context, BackupService.class);

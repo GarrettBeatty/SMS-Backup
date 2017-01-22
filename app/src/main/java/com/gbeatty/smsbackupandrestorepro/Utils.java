@@ -29,30 +29,24 @@ import javax.mail.internet.MimeMessage;
 
 public class Utils {
 
-    static final int REQUEST_ACCOUNT_PICKER = 1000;
-    static final int REQUEST_AUTHORIZATION = 1001;
-    static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
-    static final int REQUEST_PERMISSION_MULTIPLE = 1004;
-
     public static final int BACKUP_IDLE = 0;
     public static final int BACKUP_COMPLETE = 1;
     public static final int BACKUP_STARTING = 2;
     public static final int BACKUP_STOPPING = 3;
     public static final int BACKUP_RUNNING = 4;
-
     public static final int RESTORE_IDLE = 0;
     public static final int RESTORE_COMPLETE = 1;
     public static final int RESTORE_STARTING = 2;
     public static final int RESTORE_STOPPING = 3;
     public static final int RESTORE_RUNNING = 4;
-
     public static final String BACKUP_RESULT = "com.gbeatty.smsbackupandrestorepro.BackupService.REQUEST_PROCESSED";
     public static final String BACKUP_MESSAGE = "com.gbeatty.smsbackupandrestorepro.BackupService.BACKUP_MSG";
-
     public static final String RESTORE_RESULT = "com.gbeatty.smsbackupandrestorepro.BackupService.RESTORE_PROCESSED";
     public static final String RESTORE_MESSAGE = "com.gbeatty.smsbackupandrestorepro.BackupService.RESTORE_MSG";
-
-
+    static final int REQUEST_ACCOUNT_PICKER = 1000;
+    static final int REQUEST_AUTHORIZATION = 1001;
+    static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
+    static final int REQUEST_PERMISSION_MULTIPLE = 1004;
     static final String PREF_ACCOUNT_NAME = "accountName";
     static final String[] SCOPES = {GmailScopes.GMAIL_LABELS, GmailScopes.GMAIL_MODIFY};
 
@@ -61,11 +55,11 @@ public class Utils {
         List<Label> labels = response.getLabels();
 
         Label label = null;
-        for(Label l : labels){
-            if(l.getName().equalsIgnoreCase(name)) label = l;
+        for (Label l : labels) {
+            if (l.getName().equalsIgnoreCase(name)) label = l;
         }
 
-        if(label == null){
+        if (label == null) {
             label = new Label();
             label.setName(name).setLabelListVisibility("labelShow").setMessageListVisibility("show");
             label = service.users().labels().create(user, label).execute();
@@ -103,20 +97,20 @@ public class Utils {
     /**
      * List all Threads of the user's mailbox with labelIds applied.
      *
-     * @param service Authorized Gmail API instance.
-     * @param userId User's email address. The special value "me"
-     * can be used to indicate the authenticated user.
+     * @param service  Authorized Gmail API instance.
+     * @param userId   User's email address. The special value "me"
+     *                 can be used to indicate the authenticated user.
      * @param labelIds String used to filter the Threads listed.
      * @throws IOException
      */
-    public static List<Thread> getThreadsWithLabelsQuery (Gmail service, String userId,
-                                              String query, String... labelIds) throws IOException {
+    public static List<Thread> getThreadsWithLabelsQuery(Gmail service, String userId,
+                                                         String query, String... labelIds) throws IOException {
 
         ListThreadsResponse response = service.users().threads().list(userId).setLabelIds(Arrays.asList(labelIds)).setQ(query).execute();
         List<Thread> threads = new ArrayList<>();
-        while(response.getThreads() != null) {
+        while (response.getThreads() != null) {
             threads.addAll(response.getThreads());
-            if(response.getNextPageToken() != null) {
+            if (response.getNextPageToken() != null) {
                 String pageToken = response.getNextPageToken();
                 response = service.users().threads().list(userId).setLabelIds(Arrays.asList(labelIds)).setQ(query)
                         .setPageToken(pageToken).execute();
@@ -132,9 +126,9 @@ public class Utils {
      * Insert an email message into the user's mailbox.
      *
      * @param service Authorized Gmail API instance.
-     * @param userId User's email address. The special value "me"
-     * can be used to indicate the authenticated user.
-     * @param email Email to be inserted.
+     * @param userId  User's email address. The special value "me"
+     *                can be used to indicate the authenticated user.
+     * @param email   Email to be inserted.
      * @throws MessagingException
      * @throws IOException
      */
@@ -144,11 +138,11 @@ public class Utils {
         Message message = createMessageWithEmail(email);
 
         //set a
-        if(labels.length > 0){
+        if (labels.length > 0) {
             message.setLabelIds(Arrays.asList(labels));
         }
 
-        if(thread != null){
+        if (thread != null) {
             message.setThreadId(thread);
         }
 
@@ -161,13 +155,12 @@ public class Utils {
     }
 
 
-
     /**
      * Create a MimeMessage using the parameters provided.
      *
-     * @param to email address of the receiver
-     * @param from email address of the sender, the mailbox account
-     * @param subject subject of the email
+     * @param to       email address of the receiver
+     * @param from     email address of the sender, the mailbox account
+     * @param subject  subject of the email
      * @param bodyText body text of the email
      * @return the MimeMessage to be used to send email
      * @throws MessagingException

@@ -52,6 +52,7 @@ import static com.gbeatty.smsbackupandrestorepro.Utils.insertMessage;
 
 public class BackupService extends Service {
 
+    public static boolean RUNNING = false;
     private Uri uri = Uri.parse("content://sms/");
     private String[] projection = {"address", "read", "body", "date", "type"
     };
@@ -64,18 +65,27 @@ public class BackupService extends Service {
     private String labelName;
     private LocalBroadcastManager broadcaster;
     private String user = "me";
-
     private Map<String, String> contacts;
-
     private Long tempLastDate = Long.MIN_VALUE;
-
     private NotificationManager mNotificationManager = null;
     private NotificationCompat.Builder mNotifyBuilder = null;
     private int notifyID = 1;
     private String[] labelIDs;
 
+    public static java.lang.Thread performOnBackgroundThread(final Runnable runnable) {
+        final java.lang.Thread t = new java.lang.Thread() {
+            @Override
+            public void run() {
+                try {
+                    runnable.run();
+                } finally {
 
-    public static boolean RUNNING = false;
+                }
+            }
+        };
+        t.start();
+        return t;
+    }
 
     @Override
     public void onCreate() {
@@ -122,7 +132,7 @@ public class BackupService extends Service {
         String threadID = null;
 
         List<Thread> threads = getThreadsWithLabelsQuery(mService, user, query, labelIDs);
-        if(threads.size() > 0){
+        if (threads.size() > 0) {
             threadID = threads.get(0).getId();
         }
 
@@ -130,11 +140,11 @@ public class BackupService extends Service {
         String to;
         String personal;
 
-        if(folder.equals("inbox")){
+        if (folder.equals("inbox")) {
             to = account;
             personal = name;
             from = address + "@g.mail";
-        }else{
+        } else {
             to = address + "@g.mail";
             personal = "me";
             from = account;
@@ -149,22 +159,21 @@ public class BackupService extends Service {
 
     }
 
-
-    private void saveValuesToSharedPrefs(){
+    private void saveValuesToSharedPrefs() {
         SharedPreferences.Editor editor = settings.edit();
         editor.putLong("last_date", tempLastDate);
         editor.apply();
     }
 
-    private void updateProgress(int current, int total, int status){
+    private void updateProgress(int current, int total, int status) {
         Intent intent = new Intent(BACKUP_RESULT);
         int[] message = {current, total, status};
         intent.putExtra(BACKUP_MESSAGE, message);
         broadcaster.sendBroadcast(intent);
 
-        if(!settings.getBoolean("notifications", false)) return;
+        if (!settings.getBoolean("notifications", false)) return;
 
-        switch (status){
+        switch (status) {
             case BACKUP_STARTING:
                 updateNotification("Progress: Starting...");
                 break;
@@ -185,10 +194,10 @@ public class BackupService extends Service {
 
     private int handleBackup() throws IOException, MessagingException {
 
-            labelIDs = new String[]{createLabelIfNotExistAndGetLabelID(mService, user, labelName)};
+        labelIDs = new String[]{createLabelIfNotExistAndGetLabelID(mService, user, labelName)};
 
         RUNNING = true;
-        updateProgress(0,0, BACKUP_STARTING);
+        updateProgress(0, 0, BACKUP_STARTING);
         BigInteger lastDate = BigInteger.valueOf(tempLastDate);
 
         ContentResolver resolver = getContentResolver();
@@ -201,7 +210,7 @@ public class BackupService extends Service {
             int count = 0;
             for (int i = 0; i < totalSMS; i++) {
 
-                if(!RUNNING){
+                if (!RUNNING) {
                     c.close();
                     return BACKUP_IDLE;
                 }
@@ -212,7 +221,7 @@ public class BackupService extends Service {
                 String date = c.getString(c.getColumnIndexOrThrow("date"));
                 String folder;
                 String name = contacts.get(address);
-                if(name == null) name = address;
+                if (name == null) name = address;
                 if (c.getString(c.getColumnIndexOrThrow("type")).contains("1")) {
                     folder = "inbox";
                 } else {
@@ -235,12 +244,12 @@ public class BackupService extends Service {
 
         Cursor managedCursor = getContentResolver()
                 .query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                        new String[] {ContactsContract.CommonDataKinds.Phone._ID, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, ContactsContract.CommonDataKinds.Phone.NUMBER}, null, null,  ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC");
+                        new String[]{ContactsContract.CommonDataKinds.Phone._ID, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, ContactsContract.CommonDataKinds.Phone.NUMBER}, null, null, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC");
 
-        if(managedCursor != null && managedCursor.getCount() > 0){
+        if (managedCursor != null && managedCursor.getCount() > 0) {
             managedCursor.moveToFirst();
             int total = managedCursor.getCount();
-            for(int i = 0; i < total; i++){
+            for (int i = 0; i < total; i++) {
                 String number = managedCursor.getString(managedCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
                 String name = managedCursor.getString(managedCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
                 String phNo = number.replaceAll("[()\\-\\s]", "").trim();
@@ -254,15 +263,15 @@ public class BackupService extends Service {
 
     }
 
-    private void stopOnError(){
+    private void stopOnError() {
         RUNNING = false;
-        updateProgress(0,0,BACKUP_IDLE);
+        updateProgress(0, 0, BACKUP_IDLE);
         stopSelf();
     }
 
-    public void updateNotification(String text){
+    public void updateNotification(String text) {
 
-        if(mNotificationManager == null || mNotifyBuilder == null){
+        if (mNotificationManager == null || mNotifyBuilder == null) {
 
             Intent resultIntent = new Intent(this, MainActivity.class);
 
@@ -306,7 +315,7 @@ public class BackupService extends Service {
                 try {
                     int status = handleBackup();
                     saveValuesToSharedPrefs();
-                    updateProgress(0,0,status);
+                    updateProgress(0, 0, status);
                     stopSelf();
                 } catch (UserRecoverableAuthIOException e) {
                     startActivity(e.getIntent().setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
@@ -320,22 +329,7 @@ public class BackupService extends Service {
                 }
             }
         });
-        return  START_STICKY;
-    }
-
-    public static java.lang.Thread performOnBackgroundThread(final Runnable runnable) {
-        final java.lang.Thread t = new java.lang.Thread() {
-            @Override
-            public void run() {
-                try {
-                    runnable.run();
-                } finally {
-
-                }
-            }
-        };
-        t.start();
-        return t;
+        return START_STICKY;
     }
 
 }

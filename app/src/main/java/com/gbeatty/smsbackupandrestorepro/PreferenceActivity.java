@@ -77,7 +77,7 @@ public class PreferenceActivity extends BaseActivity implements OnCompleteListen
         return super.onOptionsItemSelected(item);
     }
 
-    public static class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener{
+    public static class SettingsFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
 
         private OnCompleteListener mListener;
 
@@ -134,27 +134,27 @@ public class PreferenceActivity extends BaseActivity implements OnCompleteListen
             }
         }
 
-        private void updatePrefSummary(Preference pref){
-            if(pref instanceof MaterialEditTextPreference){
+        private void updatePrefSummary(Preference pref) {
+            if (pref instanceof MaterialEditTextPreference) {
                 MaterialEditTextPreference materialEditTextPreference = (MaterialEditTextPreference) pref;
-                if(materialEditTextPreference.getKey().equals("backup_interval")){
+                if (materialEditTextPreference.getKey().equals("backup_interval")) {
                     pref.setSummary("Every " + materialEditTextPreference.getText() + " hours");
-                }else{
+                } else {
                     pref.setSummary(materialEditTextPreference.getText());
                 }
             }
-            if(pref instanceof MaterialListPreference){
+            if (pref instanceof MaterialListPreference) {
                 MaterialListPreference listPreference = (MaterialListPreference) pref;
-                if(listPreference.getEntry() == null){
+                if (listPreference.getEntry() == null) {
                     listPreference.setValueIndex(0);
                 }
                 pref.setSummary(listPreference.getEntry() + " most recent messages");
             }
 
-            if(pref instanceof CheckBoxPreference){
+            if (pref instanceof CheckBoxPreference) {
                 CheckBoxPreference checkBoxPreference = (CheckBoxPreference) pref;
-                if(checkBoxPreference.getKey().equals("auto_backup")){
-                    if(!checkBoxPreference.isChecked()){
+                if (checkBoxPreference.getKey().equals("auto_backup")) {
+                    if (!checkBoxPreference.isChecked()) {
                         Intent intent = new Intent(getActivity(), BackupService.class);
                         PendingIntent pintent = PendingIntent.getService(getActivity(), 0, intent, 0);
                         AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(ALARM_SERVICE);

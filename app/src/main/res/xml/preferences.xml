@@ -6,7 +6,7 @@
         <Preference
             android:key="backup_account"
             android:summary="No account selected"
-            android:title="Backup Account"/>
+            android:title="Backup Account" />
 
         <com.afollestad.materialdialogs.prefs.MaterialEditTextPreference
             android:defaultValue="1"
@@ -41,9 +41,9 @@
     <PreferenceCategory android:title="Restore">
 
         <com.afollestad.materialdialogs.prefs.MaterialListPreference
+            android:defaultValue="0"
             android:entries="@array/restore_values"
             android:entryValues="@array/restore_values"
-            android:defaultValue="0"
             android:key="restore_limit"
             android:persistent="true"
             android:summary="Number of most recent SMS to restore"

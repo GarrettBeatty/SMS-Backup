@@ -30,6 +30,7 @@ import static com.gbeatty.smsbackupandrestorepro.Utils.SCOPES;
 
 public class RestoreService extends Service {
 
+    public static boolean RUNNING;
     private GoogleAccountCredential credential;
     private com.google.api.services.gmail.Gmail mService = null;
     private SharedPreferences settings;
@@ -42,10 +43,20 @@ public class RestoreService extends Service {
     private Uri uriSent = Uri.parse("content://sms/sent");
     private Uri uriInbox = Uri.parse("content://sms/inbox");
 
+    public static java.lang.Thread performOnBackgroundThread(final Runnable runnable) {
+        final java.lang.Thread t = new java.lang.Thread() {
+            @Override
+            public void run() {
+                try {
+                    runnable.run();
+                } finally {
 
-    public static boolean RUNNING;
-
-
+                }
+            }
+        };
+        t.start();
+        return t;
+    }
 
     @Nullable
     @Override
@@ -91,16 +102,16 @@ public class RestoreService extends Service {
                     handleRestore();
                 } catch (IOException e) {
                     RUNNING = false;
-                    updateProgress(0,0,RESTORE_IDLE);
+                    updateProgress(0, 0, RESTORE_IDLE);
                     e.printStackTrace();
                 } catch (MessagingException e) {
                     RUNNING = false;
-                    updateProgress(0,0,RESTORE_IDLE);
+                    updateProgress(0, 0, RESTORE_IDLE);
                     e.printStackTrace();
                 }
             }
         });
-        return  START_STICKY;
+        return START_STICKY;
     }
 
     private void updateProgress(int current, int total, int status) {
@@ -112,21 +123,6 @@ public class RestoreService extends Service {
 
     private void handleRestore() throws IOException, MessagingException {
 
-    }
-
-    public static java.lang.Thread performOnBackgroundThread(final Runnable runnable) {
-        final java.lang.Thread t = new java.lang.Thread() {
-            @Override
-            public void run() {
-                try {
-                    runnable.run();
-                } finally {
-
-                }
-            }
-        };
-        t.start();
-        return t;
     }
 
 }
