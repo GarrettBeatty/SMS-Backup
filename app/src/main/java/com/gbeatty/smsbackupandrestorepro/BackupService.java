@@ -1,6 +1,7 @@
 package com.gbeatty.smsbackupandrestorepro;
 
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -262,12 +263,24 @@ public class BackupService extends Service {
     public void updateNotification(String text){
 
         if(mNotificationManager == null || mNotifyBuilder == null){
+
+            Intent resultIntent = new Intent(this, MainActivity.class);
+
+            PendingIntent resultPendingIntent =
+                    PendingIntent.getActivity(
+                            this,
+                            0,
+                            resultIntent,
+                            PendingIntent.FLAG_UPDATE_CURRENT
+                    );
+
             mNotificationManager =
                     (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 // Sets an ID for the notification, so it can be updated
             mNotifyBuilder = new NotificationCompat.Builder(this)
                     .setContentTitle("SMS Backup and Restore Pro")
                     .setContentText("")
+                    .setContentIntent(resultPendingIntent)
                     .setSmallIcon(R.mipmap.ic_launcher);
         }
 
