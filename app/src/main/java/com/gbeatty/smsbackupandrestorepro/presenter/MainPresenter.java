@@ -2,10 +2,15 @@ package com.gbeatty.smsbackupandrestorepro.presenter;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import com.gbeatty.smsbackupandrestorepro.BackupService;
 import com.gbeatty.smsbackupandrestorepro.views.MainView;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_COMPLETE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_IDLE;
@@ -43,6 +48,7 @@ public class MainPresenter {
             updateBackupButtonText("Backup");
             updateProgressBar(0);
             updateProgressInfo("Complete");
+            updateLastComplete();
         } else if (status == BACKUP_STARTING) {
             updateProgressInfo("Starting...");
         } else if (status == BACKUP_STOPPING) {
@@ -97,6 +103,20 @@ public class MainPresenter {
 
     public void resume() {
         updateProgressInfo("Idle");
+        updateLastComplete();
+    }
+
+    private void updateLastComplete() {
+        long lastComplete = settings.getLong("last_complete", Long.MIN_VALUE);
+        String dateString;
+        if( lastComplete != Long.MIN_VALUE){
+            dateString = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss", Locale.getDefault()).format(new Date(lastComplete));
+            dateString = "Last backed up: " + dateString;
+        }else{
+            dateString = "Not Backed up yet.";
+        }
+        Log.d("Date String", dateString);
+        view.updateLastComplete(dateString);
     }
 
     private void createToast(String text) {

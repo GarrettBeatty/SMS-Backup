@@ -166,10 +166,18 @@ public class BackupService extends Service {
     }
 
     private void updateProgress(int current, int total, int status) {
+
+        if(status == BACKUP_COMPLETE){
+            SharedPreferences.Editor editor = settings.edit();
+            editor.putLong("last_complete", System.currentTimeMillis());
+            editor.apply();
+        }
+
         Intent intent = new Intent(BACKUP_RESULT);
         int[] message = {current, total, status};
         intent.putExtra(BACKUP_MESSAGE, message);
         broadcaster.sendBroadcast(intent);
+
 
         if (!settings.getBoolean("notifications", false)) return;
 
@@ -208,7 +216,7 @@ public class BackupService extends Service {
             c.moveToFirst();
             int totalSMS = c.getCount();
             int count = 0;
-            for (int i = 0; i < totalSMS; i++) {
+            for (int i = 0; i < 5; i++) {
 
                 if (!RUNNING) {
                     c.close();

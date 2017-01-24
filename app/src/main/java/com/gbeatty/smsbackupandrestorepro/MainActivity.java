@@ -32,6 +32,7 @@ public class MainActivity extends BaseActivity implements MainView {
     MaterialProgressBar progressBar;
     @BindView(R.id.backupButton)
     Button backupButton;
+    @BindView(R.id.last_complete) TextView lastComplete;
     private BroadcastReceiver receiver;
     private MainPresenter presenter;
     private Intent intent;
@@ -125,6 +126,11 @@ public class MainActivity extends BaseActivity implements MainView {
         if (autoBackup) {
             alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + interval, interval, pintent);
         }
+    }
+
+    @Override
+    public void updateLastComplete(String text) {
+        lastComplete.setText(text);
     }
 
     @Override

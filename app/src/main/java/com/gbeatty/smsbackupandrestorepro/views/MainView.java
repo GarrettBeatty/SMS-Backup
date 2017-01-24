@@ -16,4 +16,6 @@ public interface MainView {
     void loginGoogle(boolean b);
 
     void startBackupService(Long interval);
+
+    void updateLastComplete(String dateString);
 }
