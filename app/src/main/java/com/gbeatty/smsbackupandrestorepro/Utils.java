@@ -8,10 +8,12 @@ import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.Label;
 import com.google.api.services.gmail.model.ListLabelsResponse;
+import com.google.api.services.gmail.model.ListMessagesResponse;
 import com.google.api.services.gmail.model.ListThreadsResponse;
 import com.google.api.services.gmail.model.Message;
 import com.google.api.services.gmail.model.Thread;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,6 +29,8 @@ import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import static android.os.Build.VERSION_CODES.M;
+
 public class Utils {
 
     public static final int BACKUP_IDLE = 0;
@@ -34,11 +38,10 @@ public class Utils {
     public static final int BACKUP_STARTING = 2;
     public static final int BACKUP_STOPPING = 3;
     public static final int BACKUP_RUNNING = 4;
-    public static final int RESTORE_IDLE = 0;
-    public static final int RESTORE_COMPLETE = 1;
-    public static final int RESTORE_STARTING = 2;
-    public static final int RESTORE_STOPPING = 3;
-    public static final int RESTORE_RUNNING = 4;
+    public static final int RESTORE_COMPLETE = 5;
+    public static final int RESTORE_STARTING = 6;
+    public static final int RESTORE_STOPPING = 7;
+    public static final int RESTORE_RUNNING = 8;
     public static final String BACKUP_RESULT = "com.gbeatty.smsbackupandrestorepro.BackupService.REQUEST_PROCESSED";
     public static final String BACKUP_MESSAGE = "com.gbeatty.smsbackupandrestorepro.BackupService.BACKUP_MSG";
     public static final String RESTORE_RESULT = "com.gbeatty.smsbackupandrestorepro.BackupService.RESTORE_PROCESSED";
@@ -69,30 +72,29 @@ public class Utils {
         return label.getId();
     }
 
-    public static String loadJSONFromAsset(Context context, String fileName) {
-        String json = null;
-        try {
+    public static List<Message> getMessagesMatchingQuery(Gmail service, String userId,
+                                                         String... labelIds) throws IOException {
+        ListMessagesResponse response = service.users().messages().list(userId).setLabelIds(Arrays.asList(labelIds)).execute();
 
-            InputStream is = context.getAssets().open(fileName);
-
-            int size = is.available();
-
-            byte[] buffer = new byte[size];
-
-            is.read(buffer);
-
-            is.close();
-
-            json = new String(buffer, "UTF-8");
-
-
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            return null;
+        List<Message> messages = new ArrayList<>();
+        while (response.getMessages() != null) {
+            messages.addAll(response.getMessages());
+            if (response.getNextPageToken() != null) {
+                String pageToken = response.getNextPageToken();
+                response = service.users().messages().list(userId).setLabelIds(Arrays.asList(labelIds))
+                        .setPageToken(pageToken).execute();
+            } else {
+                break;
+            }
         }
-        return json;
 
+        for (Message message : messages) {
+            System.out.println(message.toPrettyString());
+        }
+
+        return messages;
     }
+
 
     /**
      * List all Threads of the user's mailbox with labelIds applied.
@@ -121,6 +123,19 @@ public class Utils {
 
         return threads;
     }
+
+    public static MimeMessage getMimeMessage(Gmail service, String userId, String messageId)
+            throws IOException, MessagingException {
+        Message message = service.users().messages().get(userId, messageId).setFormat("raw").execute();
+
+        byte[] emailBytes = Base64.decodeBase64(message.getRaw());
+
+        Properties props = new Properties();
+        Session session = Session.getDefaultInstance(props, null);
+
+        return new MimeMessage(session, new ByteArrayInputStream(emailBytes));
+    }
+
 
     /**
      * Insert an email message into the user's mailbox.

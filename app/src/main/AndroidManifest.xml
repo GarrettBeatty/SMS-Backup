@@ -31,6 +31,9 @@
         <service
             android:name=".BackupService"
             android:exported="false"/>
+        <service
+            android:name=".RestoreService"
+            android:exported="false"/>
 
         <!-- Will not be called unless the application explicitly enables it -->
         <receiver android:name=".DeviceBootReceiver"

@@ -1,36 +1,53 @@
 package com.gbeatty.smsbackupandrestorepro;
 
-
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ExponentialBackOff;
+import com.google.api.services.gmail.model.Message;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
-import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_MESSAGE;
+import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_IDLE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.PREF_ACCOUNT_NAME;
-import static com.gbeatty.smsbackupandrestorepro.Utils.RESTORE_IDLE;
+import static com.gbeatty.smsbackupandrestorepro.Utils.RESTORE_COMPLETE;
+import static com.gbeatty.smsbackupandrestorepro.Utils.RESTORE_MESSAGE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.RESTORE_RESULT;
+import static com.gbeatty.smsbackupandrestorepro.Utils.RESTORE_RUNNING;
+import static com.gbeatty.smsbackupandrestorepro.Utils.RESTORE_STARTING;
+import static com.gbeatty.smsbackupandrestorepro.Utils.RESTORE_STOPPING;
 import static com.gbeatty.smsbackupandrestorepro.Utils.SCOPES;
+import static com.gbeatty.smsbackupandrestorepro.Utils.createLabelIfNotExistAndGetLabelID;
+import static com.gbeatty.smsbackupandrestorepro.Utils.getMessagesMatchingQuery;
+import static com.gbeatty.smsbackupandrestorepro.Utils.getMimeMessage;
 
 public class RestoreService extends Service {
 
-    public static boolean RUNNING;
+    public static boolean RUNNING = false;
+   
     private GoogleAccountCredential credential;
     private com.google.api.services.gmail.Gmail mService = null;
     private SharedPreferences settings;
@@ -40,8 +57,10 @@ public class RestoreService extends Service {
     private String labelName;
     private LocalBroadcastManager broadcaster;
     private String user = "me";
-    private Uri uriSent = Uri.parse("content://sms/sent");
-    private Uri uriInbox = Uri.parse("content://sms/inbox");
+    private NotificationManager mNotificationManager = null;
+    private NotificationCompat.Builder mNotifyBuilder = null;
+    private int notifyID = 1;
+    private String[] labelIDs;
 
     public static java.lang.Thread performOnBackgroundThread(final Runnable runnable) {
         final java.lang.Thread t = new java.lang.Thread() {
@@ -58,15 +77,11 @@ public class RestoreService extends Service {
         return t;
     }
 
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
-
     @Override
     public void onCreate() {
         super.onCreate();
+
+        Log.d("service1", "service");
 
         // Initialize credentials and service object.
         credential = GoogleAccountCredential.usingOAuth2(
@@ -90,39 +105,137 @@ public class RestoreService extends Service {
                 .build();
 
         broadcaster = LocalBroadcastManager.getInstance(this);
+    }
 
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    private void updateProgress(int current, int total, int status) {
+        Log.d("handling", "handling");
+        Intent intent = new Intent(RESTORE_RESULT);
+        int[] message = {current, total, status};
+        intent.putExtra(RESTORE_MESSAGE, message);
+        broadcaster.sendBroadcast(intent);
+
+        if (!settings.getBoolean("notifications", false)) return;
+
+        switch (status) {
+            case RESTORE_STARTING:
+                updateNotification("Progress: Starting...");
+                break;
+            case RESTORE_RUNNING:
+                updateNotification("" + current + " out of " + total + " SMS restored");
+                break;
+            case RESTORE_STOPPING:
+                updateNotification("Progress: Stopping...");
+                break;
+            case RESTORE_COMPLETE:
+                updateNotification("Progress: Complete");
+                break;
+            case BACKUP_IDLE:
+                updateNotification("Progress: Idle");
+        }
+
+    }
+
+    private void handleMimeMessage(MimeMessage message, int count, int total){
+
+        updateProgress(count, total, RESTORE_RUNNING);
+        //todo
+
+        
+        
+    }
+
+    private int handleRestore() throws IOException, MessagingException {
+
+        labelIDs = new String[]{createLabelIfNotExistAndGetLabelID(mService, user, labelName)};
+
+        RUNNING = true;
+        updateProgress(0, 0, RESTORE_STARTING);
+
+        List<Message> messages = getMessagesMatchingQuery(mService, user, labelIDs);
+        for(int i = 0; i < messages.size(); i++){
+            if (!RUNNING) {
+                return BACKUP_IDLE;
+            }
+            MimeMessage mimeMessage = getMimeMessage(mService,user, messages.get(i).getId());
+            handleMimeMessage(mimeMessage, i, messages.size());
+        }
+
+        return RESTORE_COMPLETE;
+    }
+
+
+    private void stopOnError() {
+        updateProgress(0, 0, BACKUP_IDLE);
+        stopSelf();
+    }
+
+    public void updateNotification(String text) {
+
+        if (mNotificationManager == null || mNotifyBuilder == null) {
+
+            Intent resultIntent = new Intent(this, MainActivity.class);
+
+            PendingIntent resultPendingIntent =
+                    PendingIntent.getActivity(
+                            this,
+                            0,
+                            resultIntent,
+                            PendingIntent.FLAG_UPDATE_CURRENT
+                    );
+
+            mNotificationManager =
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+// Sets an ID for the notification, so it can be updated
+            mNotifyBuilder = new NotificationCompat.Builder(this)
+                    .setContentTitle("SMS Backup and Restore Pro")
+                    .setContentText("")
+                    .setContentIntent(resultPendingIntent)
+                    .setSmallIcon(R.mipmap.ic_launcher);
+        }
+
+        mNotifyBuilder.setContentText(text);
+        // Because the ID remains unchanged, the existing notification is
+        // updated.
+        mNotificationManager.notify(
+                notifyID,
+                mNotifyBuilder.build());
+    }
+
+    @Override
+    public void onDestroy() {
+        RUNNING = false;
+        super.onDestroy();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d("service", "service");
         performOnBackgroundThread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    handleRestore();
+                    int status = handleRestore();
+                    updateProgress(0, 0, status);
+                    stopSelf();
+                } catch (UserRecoverableAuthIOException e) {
+                    startActivity(e.getIntent().setFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                    stopOnError();
                 } catch (IOException e) {
-                    RUNNING = false;
-                    updateProgress(0, 0, RESTORE_IDLE);
+                    stopOnError();
                     e.printStackTrace();
                 } catch (MessagingException e) {
-                    RUNNING = false;
-                    updateProgress(0, 0, RESTORE_IDLE);
+                    stopOnError();
                     e.printStackTrace();
                 }
             }
         });
         return START_STICKY;
-    }
-
-    private void updateProgress(int current, int total, int status) {
-        Intent intent = new Intent(RESTORE_RESULT);
-        int[] message = {current, total, status};
-        intent.putExtra(BACKUP_MESSAGE, message);
-        broadcaster.sendBroadcast(intent);
-    }
-
-    private void handleRestore() throws IOException, MessagingException {
-
     }
 
 }

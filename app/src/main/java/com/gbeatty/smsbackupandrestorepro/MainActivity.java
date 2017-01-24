@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,6 +24,7 @@ import butterknife.OnClick;
 import me.zhanghai.android.materialprogressbar.MaterialProgressBar;
 
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_RESULT;
+import static com.gbeatty.smsbackupandrestorepro.Utils.RESTORE_RESULT;
 
 public class MainActivity extends BaseActivity implements MainView {
 
@@ -33,7 +35,9 @@ public class MainActivity extends BaseActivity implements MainView {
     @BindView(R.id.backupButton)
     Button backupButton;
     @BindView(R.id.last_complete) TextView lastComplete;
-    private BroadcastReceiver receiver;
+    @BindView(R.id.restoreButton) Button restoreButton;
+    private BroadcastReceiver backupReceiver;
+    private BroadcastReceiver restoreReceiver;
     private MainPresenter presenter;
     private Intent intent;
     private PendingIntent pintent;
@@ -48,10 +52,17 @@ public class MainActivity extends BaseActivity implements MainView {
         settings = PreferenceManager.getDefaultSharedPreferences(this);
         presenter = new MainPresenter(this, settings);
 
-        receiver = new BroadcastReceiver() {
+        backupReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 presenter.handleBackupReceiver(intent);
+            }
+        };
+
+        restoreReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                presenter.handleRestoreReceiver(intent);
             }
         };
 
@@ -68,7 +79,8 @@ public class MainActivity extends BaseActivity implements MainView {
 
     @OnClick(R.id.restoreButton)
     public void restore() {
-
+        Log.d("Clicked", "clicked");
+        presenter.restore();
     }
 
     @Override
@@ -85,21 +97,20 @@ public class MainActivity extends BaseActivity implements MainView {
     @Override
     protected void onResume() {
         super.onResume();
-        LocalBroadcastManager.getInstance(this).registerReceiver((receiver),
+        LocalBroadcastManager.getInstance(this).registerReceiver((backupReceiver),
                 new IntentFilter(BACKUP_RESULT)
+        );
+        LocalBroadcastManager.getInstance(this).registerReceiver((restoreReceiver),
+                new IntentFilter(RESTORE_RESULT)
         );
         presenter.resume();
     }
 
     @Override
     protected void onStop() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(receiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(backupReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(restoreReceiver);
         super.onStop();
-    }
-
-    @Override
-    public void updateProgressInfo(int count, int total) {
-        progressInfo.setText(getResources().getString(R.string.progress_info, count, total));
     }
 
     @Override
@@ -131,6 +142,33 @@ public class MainActivity extends BaseActivity implements MainView {
     @Override
     public void updateLastComplete(String text) {
         lastComplete.setText(text);
+    }
+
+    @Override
+    public void startRestoreService() {
+        Intent serviceIntent = new Intent(getApplicationContext(), RestoreService.class);
+        startService(serviceIntent);
+        Log.d("fjdafasd", "Fdasfas");
+    }
+
+    @Override
+    public void updateProgressInfoRestore(int count, int total) {
+        progressInfo.setText(getResources().getString(R.string.progress_info_restore, count, total));
+    }
+
+    @Override
+    public void updateProgressInfoBackup(int count, int total) {
+        progressInfo.setText(getResources().getString(R.string.progress_info_backup, count, total));
+    }
+
+    @Override
+    public void updateRestoreButtonText(String s) {
+        restoreButton.setText(s);
+    }
+
+    @Override
+    public void enableRestoreButton(boolean b) {
+        restoreButton.setEnabled(b);
     }
 
     @Override

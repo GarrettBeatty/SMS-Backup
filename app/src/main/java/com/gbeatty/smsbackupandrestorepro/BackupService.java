@@ -241,7 +241,6 @@ public class BackupService extends Service {
 
                 c.moveToNext();
             }
-            RUNNING = false;
             c.close();
             return BACKUP_COMPLETE;
         }
@@ -272,7 +271,6 @@ public class BackupService extends Service {
     }
 
     private void stopOnError() {
-        RUNNING = false;
         updateProgress(0, 0, BACKUP_IDLE);
         stopSelf();
     }
@@ -312,6 +310,7 @@ public class BackupService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        RUNNING = false;
         saveValuesToSharedPrefs();
     }
 

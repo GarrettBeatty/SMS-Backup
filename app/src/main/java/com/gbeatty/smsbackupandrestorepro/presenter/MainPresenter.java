@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.gbeatty.smsbackupandrestorepro.BackupService;
+import com.gbeatty.smsbackupandrestorepro.RestoreService;
 import com.gbeatty.smsbackupandrestorepro.views.MainView;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 
@@ -18,6 +19,11 @@ import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_MESSAGE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_RUNNING;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_STARTING;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_STOPPING;
+import static com.gbeatty.smsbackupandrestorepro.Utils.RESTORE_COMPLETE;
+import static com.gbeatty.smsbackupandrestorepro.Utils.RESTORE_MESSAGE;
+import static com.gbeatty.smsbackupandrestorepro.Utils.RESTORE_RUNNING;
+import static com.gbeatty.smsbackupandrestorepro.Utils.RESTORE_STARTING;
+import static com.gbeatty.smsbackupandrestorepro.Utils.RESTORE_STOPPING;
 
 public class MainPresenter {
 
@@ -40,19 +46,19 @@ public class MainPresenter {
             if (total != 0) {
                 percent = (100 * count) / total;
             }
-            updateProgressInfo(count, total);
+            updateProgressInfo(count, total, status);
             updateProgressBar(percent);
             updateBackupButtonText("Stop Backup");
 
         } else if (status == BACKUP_COMPLETE) {
             updateBackupButtonText("Backup");
             updateProgressBar(0);
-            updateProgressInfo("Complete");
+            updateProgressInfo("Backup complete");
             updateLastComplete();
         } else if (status == BACKUP_STARTING) {
-            updateProgressInfo("Starting...");
+            updateProgressInfo("Backup starting...");
         } else if (status == BACKUP_STOPPING) {
-            updateProgressInfo("Stopping...");
+            updateProgressInfo("Backup stopping...");
         } else if (status == BACKUP_IDLE) {
             updateBackupButtonText("Backup");
             updateProgressBar(0);
@@ -62,8 +68,13 @@ public class MainPresenter {
         enableBackupButton(true);
     }
 
-    private void updateProgressInfo(int count, int total) {
-        view.updateProgressInfo(count, total);
+    private void updateProgressInfo(int count, int total, int status) {
+        if(status > BACKUP_RUNNING){
+            view.updateProgressInfoRestore(count, total);
+        }else{
+            view.updateProgressInfoBackup(count, total);
+        }
+
     }
 
     private void updateProgressInfo(String status) {
@@ -92,12 +103,12 @@ public class MainPresenter {
     }
 
     public void backup() {
-        if (!BackupService.RUNNING) {
+        if (!BackupService.RUNNING && !RestoreService.RUNNING) {
             startBackupService();
-        } else {
+        } else if(BackupService.RUNNING){
             enableBackupButton(false);
             BackupService.RUNNING = false;
-            createToast("Stopping backup...");
+            createToast("Backup stopping...");
         }
     }
 
@@ -128,10 +139,67 @@ public class MainPresenter {
     }
 
     public void startBackupService() {
-        createToast("Starting backup...");
+        createToast("Backup starting...");
         String i = settings.getString("backup_interval", "1");
         Long interval = Long.valueOf(i) * 3600000;
         enableBackupButton(false);
         view.startBackupService(interval);
+    }
+
+    public void restore() {
+
+        if (!RestoreService.RUNNING && !BackupService.RUNNING) {
+            startRestoreService();
+        } else if(RestoreService.RUNNING){
+            enableRestoreButton(false);
+            RestoreService.RUNNING = false;
+            createToast("Restore stopping...");
+        }
+    }
+
+    private void startRestoreService() {
+        createToast("Restore starting...");
+        view.startRestoreService();
+    }
+
+    private void enableRestoreButton(boolean b) {
+        view.enableRestoreButton(b);
+    }
+
+    public void handleRestoreReceiver(Intent intent) {
+        Log.d("TEST", "test");
+        int[] message = intent.getIntArrayExtra(RESTORE_MESSAGE);
+        int count = message[0];
+        int total = message[1];
+        int status = message[2];
+
+        if (status == RESTORE_RUNNING) {
+            int percent = 0;
+            if (total != 0) {
+                percent = (100 * count) / total;
+            }
+            updateProgressInfo(count, total, status);
+            updateProgressBar(percent);
+            updateRestoreButtonText("Stop Restore");
+
+        } else if (status == RESTORE_COMPLETE) {
+            updateRestoreButtonText("Restore");
+            updateProgressBar(0);
+            updateProgressInfo("Restore complete");
+        } else if (status == RESTORE_STARTING) {
+            updateProgressInfo("Restore starting...");
+        } else if (status == RESTORE_STOPPING) {
+            updateProgressInfo("Restore stopping...");
+        } else if (status == BACKUP_IDLE) {
+            updateRestoreButtonText("Restore");
+            updateProgressBar(0);
+            updateProgressInfo("Idle");
+        }
+
+        enableRestoreButton(true);
+    }
+
+    private void updateRestoreButtonText(String s) {
+        view.updateRestoreButtonText(s);
     }
 }

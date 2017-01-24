@@ -1,7 +1,6 @@
 package com.gbeatty.smsbackupandrestorepro.views;
 
 public interface MainView {
-    void updateProgressInfo(int count, int total);
 
     void updateProgressBar(int percent);
 
@@ -18,4 +17,14 @@ public interface MainView {
     void startBackupService(Long interval);
 
     void updateLastComplete(String dateString);
+
+    void startRestoreService();
+
+    void updateProgressInfoRestore(int count, int total);
+
+    void updateProgressInfoBackup(int count, int total);
+
+    void updateRestoreButtonText(String s);
+
+    void enableRestoreButton(boolean b);
 }
