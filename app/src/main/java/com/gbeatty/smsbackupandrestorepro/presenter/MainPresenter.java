@@ -93,17 +93,15 @@ public class MainPresenter {
         view.enableBackupButton(enabled);
     }
 
-    public void oauth(GoogleAccountCredential mCredential) {
+    private void revertToOldDefaultSMS(){
+        view.revertToOldDefaultSMS();
+    }
+
+    public void backup(GoogleAccountCredential mCredential) {
 
         if (mCredential.getSelectedAccountName() == null) {
             loginGoogle();
-        } else {
-            backup();
-        }
-    }
-
-    public void backup() {
-        if (!BackupService.RUNNING && !RestoreService.RUNNING) {
+        }else if (!BackupService.RUNNING && !RestoreService.RUNNING) {
             startBackupService();
         } else if(BackupService.RUNNING){
             enableBackupButton(false);
@@ -146,9 +144,11 @@ public class MainPresenter {
         view.startBackupService(interval);
     }
 
-    public void restore() {
+    public void restore(GoogleAccountCredential mCredential) {
 
-        if (!RestoreService.RUNNING && !BackupService.RUNNING) {
+        if (mCredential.getSelectedAccountName() == null) {
+            loginGoogle();
+        } else if (!RestoreService.RUNNING && !BackupService.RUNNING) {
             startRestoreService();
         } else if(RestoreService.RUNNING){
             enableRestoreButton(false);
@@ -186,6 +186,7 @@ public class MainPresenter {
             updateRestoreButtonText("Restore");
             updateProgressBar(0);
             updateProgressInfo("Restore complete");
+            revertToOldDefaultSMS();
         } else if (status == RESTORE_STARTING) {
             updateProgressInfo("Restore starting...");
         } else if (status == RESTORE_STOPPING) {

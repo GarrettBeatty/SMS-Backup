@@ -3,9 +3,12 @@ package com.gbeatty.smsbackupandrestorepro;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -23,14 +26,21 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.gmail.model.Message;
 
+import org.joda.time.LocalDateTime;
+
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
+import javax.mail.Address;
 import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_COMPLETE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_IDLE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.PREF_ACCOUNT_NAME;
 import static com.gbeatty.smsbackupandrestorepro.Utils.RESTORE_COMPLETE;
@@ -47,7 +57,10 @@ import static com.gbeatty.smsbackupandrestorepro.Utils.getMimeMessage;
 public class RestoreService extends Service {
 
     public static boolean RUNNING = false;
-   
+
+    private Uri uri = Uri.parse("content://sms/");
+    private String[] projection = {"address", "read", "body", "date", "type"
+    };
     private GoogleAccountCredential credential;
     private com.google.api.services.gmail.Gmail mService = null;
     private SharedPreferences settings;
@@ -141,13 +154,49 @@ public class RestoreService extends Service {
 
     }
 
-    private void handleMimeMessage(MimeMessage message, int count, int total){
+    private void handleMimeMessage(MimeMessage message, int count, int total) throws MessagingException, IOException {
+
+        Address[] froms = message.getFrom();
+        String fromEmail = froms == null ? null : ((InternetAddress) froms[0]).getAddress();
+        Log.d("from", fromEmail);
+
+        Address[] to = message.getRecipients(javax.mail.Message.RecipientType.TO);
+        String toEmail = froms == null ? null : ((InternetAddress) to[0]).getAddress();
+        Log.d("to", toEmail);
+
+        long date = message.getSentDate().getTime();
+
+        String content = message.getContent().toString();
+        Log.d("content", content);
+
+        if(fromEmail.equals(account)){
+            ContentValues values = new ContentValues();
+            String address = toEmail.split("@")[0];
+            if(checkIfExists(address, content, date)) return;
+            values.put("address", address);
+            values.put("body", content);
+            getContentResolver().insert(Uri.parse("content://sms/sent"), values);
+        }else{
+            ContentValues values = new ContentValues();
+            String address = fromEmail.split("@")[0];
+            if(checkIfExists(address, content, date)) return;
+            values.put("address", address);
+            values.put("body", content);
+            getContentResolver().insert(Uri.parse("content://sms/inbox"), values);
+        }
 
         updateProgress(count, total, RESTORE_RUNNING);
-        //todo
+    }
 
-        
-        
+    private boolean checkIfExists(String address, String body, long time){
+        ContentResolver resolver = getContentResolver();
+        String query = "date = ? AND address = ? AND body = ?";
+        String[] args = new String[]{String.valueOf(time), address, body};
+        Cursor c = resolver.query(uri, projection, query, args, null);
+        if (c != null) {
+            if(c.getCount() == 1) return true;
+        }
+        return false;
     }
 
     private int handleRestore() throws IOException, MessagingException {
@@ -158,12 +207,25 @@ public class RestoreService extends Service {
         updateProgress(0, 0, RESTORE_STARTING);
 
         List<Message> messages = getMessagesMatchingQuery(mService, user, labelIDs);
-        for(int i = 0; i < messages.size(); i++){
+
+        String amountS = settings.getString("restore_limit", "all");
+        Log.d("amounts", amountS);
+        int amount;
+        try{
+            amount = Integer.parseInt(amountS);
+        }catch (NumberFormatException e){
+            amount = messages.size();
+        }
+        if(amount > messages.size()) amount = messages.size();
+        Log.d("amount", "" + amount);
+
+        for(int i = 0; i < amount; i++){
             if (!RUNNING) {
                 return BACKUP_IDLE;
             }
+
             MimeMessage mimeMessage = getMimeMessage(mService,user, messages.get(i).getId());
-            handleMimeMessage(mimeMessage, i, messages.size());
+            handleMimeMessage(mimeMessage, i, amount);
         }
 
         return RESTORE_COMPLETE;

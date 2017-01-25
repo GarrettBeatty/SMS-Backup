@@ -1,14 +1,19 @@
 package com.gbeatty.smsbackupandrestorepro;
 
+import android.annotation.TargetApi;
 import android.app.AlarmManager;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.Telephony;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Button;
@@ -24,6 +29,7 @@ import butterknife.OnClick;
 import me.zhanghai.android.materialprogressbar.MaterialProgressBar;
 
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_RESULT;
+import static com.gbeatty.smsbackupandrestorepro.Utils.DEFAULT_SMS_REQUEST;
 import static com.gbeatty.smsbackupandrestorepro.Utils.RESTORE_RESULT;
 
 public class MainActivity extends BaseActivity implements MainView {
@@ -74,13 +80,48 @@ public class MainActivity extends BaseActivity implements MainView {
 
     @OnClick(R.id.backupButton)
     public void backup() {
-        presenter.oauth(mCredential);
+        presenter.backup(mCredential);
     }
 
     @OnClick(R.id.restoreButton)
     public void restore() {
-        Log.d("Clicked", "clicked");
-        presenter.restore();
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                if (! Telephony.Sms.getDefaultSmsPackage(this).equals(getPackageName()) ) {
+
+                  AlertDialog.Builder  builder = new AlertDialog.Builder(this);
+                    builder.setMessage("This app needs to be temporarily set as the default SMS app to restore SMS.")
+                            .setCancelable(false)
+                            .setTitle("Alert!")
+                            .setNegativeButton("No", new DialogInterface.OnClickListener() {
+
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+
+                                }
+                            })
+                            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                @TargetApi(19)
+                                public void onClick(DialogInterface dialog, int id) {
+
+                                    Intent intent =
+                                            new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
+
+                                    intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME,
+                                            getPackageName());
+
+                                    startActivityForResult(intent, DEFAULT_SMS_REQUEST);
+                                }
+                            });
+                    builder.show();
+
+                }else{
+                    presenter.restore(mCredential);
+                }
+            }else{
+                presenter.restore(mCredential);
+            }
     }
 
     @Override
@@ -172,7 +213,43 @@ public class MainActivity extends BaseActivity implements MainView {
     }
 
     @Override
+    public void revertToOldDefaultSMS() {
+        AlertDialog.Builder  builder = new AlertDialog.Builder(this);
+        builder.setMessage("You can chnage back to the old default SMS now")
+                .setCancelable(false)
+                .setTitle("Alert!")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @TargetApi(19)
+                    public void onClick(DialogInterface dialog, int id) {
+
+                        Intent intent =
+                                new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
+
+                        intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME,
+                                "defaultSmsApp");
+
+                        startActivityForResult(intent, DEFAULT_SMS_REQUEST);
+                    }
+                });
+        builder.show();
+    }
+
+    @Override
     public void enableBackupButton(boolean enabled) {
         backupButton.setEnabled(enabled);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode){
+            case DEFAULT_SMS_REQUEST:
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    if(Telephony.Sms.getDefaultSmsPackage(this).equals(getPackageName())){
+                        presenter.restore(mCredential);
+                    }
+                }
+
+        }
     }
 }

@@ -209,14 +209,15 @@ public class BackupService extends Service {
         BigInteger lastDate = BigInteger.valueOf(tempLastDate);
 
         ContentResolver resolver = getContentResolver();
-        String query = "CAST(date as BIGINT) > " + lastDate + "";
-        Cursor c = resolver.query(uri, projection, query, null, "date ASC");
+        String query = "CAST(date as BIGINT) > ?";
+        String[] args = new String[]{String.valueOf(lastDate)};
+        Cursor c = resolver.query(uri, projection, query, args, "date ASC");
 
         if (c != null && c.getCount() > 0) {
             c.moveToFirst();
             int totalSMS = c.getCount();
             int count = 0;
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < totalSMS; i++) {
 
                 if (!RUNNING) {
                     c.close();

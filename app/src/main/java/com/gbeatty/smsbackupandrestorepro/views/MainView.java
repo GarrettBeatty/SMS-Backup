@@ -27,4 +27,6 @@ public interface MainView {
     void updateRestoreButtonText(String s);
 
     void enableRestoreButton(boolean b);
+
+    void revertToOldDefaultSMS();
 }
