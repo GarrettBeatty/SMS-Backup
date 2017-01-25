@@ -15,7 +15,6 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
@@ -26,13 +25,8 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.gmail.model.Message;
 
-import org.joda.time.LocalDateTime;
-
 import java.io.IOException;
-import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 import javax.mail.Address;
@@ -40,7 +34,6 @@ import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_COMPLETE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.BACKUP_IDLE;
 import static com.gbeatty.smsbackupandrestorepro.Utils.PREF_ACCOUNT_NAME;
 import static com.gbeatty.smsbackupandrestorepro.Utils.RESTORE_COMPLETE;
@@ -61,19 +54,13 @@ public class RestoreService extends Service {
     private Uri uri = Uri.parse("content://sms/");
     private String[] projection = {"address", "read", "body", "date", "type"
     };
-    private GoogleAccountCredential credential;
     private com.google.api.services.gmail.Gmail mService = null;
     private SharedPreferences settings;
-    private HttpTransport transport;
-    private JsonFactory jsonFactory;
     private String account;
     private String labelName;
     private LocalBroadcastManager broadcaster;
-    private String user = "me";
     private NotificationManager mNotificationManager = null;
     private NotificationCompat.Builder mNotifyBuilder = null;
-    private int notifyID = 1;
-    private String[] labelIDs;
 
     public static java.lang.Thread performOnBackgroundThread(final Runnable runnable) {
         final java.lang.Thread t = new java.lang.Thread() {
@@ -94,10 +81,8 @@ public class RestoreService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        Log.d("service1", "service");
-
         // Initialize credentials and service object.
-        credential = GoogleAccountCredential.usingOAuth2(
+        GoogleAccountCredential credential = GoogleAccountCredential.usingOAuth2(
                 getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());
 
@@ -110,8 +95,8 @@ public class RestoreService extends Service {
 
         labelName = settings.getString("gmail_label", "sms");
 
-        transport = AndroidHttp.newCompatibleTransport();
-        jsonFactory = JacksonFactory.getDefaultInstance();
+        HttpTransport transport = AndroidHttp.newCompatibleTransport();
+        JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
         mService = new com.google.api.services.gmail.Gmail.Builder(
                 transport, jsonFactory, credential)
                 .setApplicationName("SMS Backup and Restore Pro")
@@ -127,7 +112,6 @@ public class RestoreService extends Service {
     }
 
     private void updateProgress(int current, int total, int status) {
-        Log.d("handling", "handling");
         Intent intent = new Intent(RESTORE_RESULT);
         int[] message = {current, total, status};
         intent.putExtra(RESTORE_MESSAGE, message);
@@ -158,16 +142,13 @@ public class RestoreService extends Service {
 
         Address[] froms = message.getFrom();
         String fromEmail = froms == null ? null : ((InternetAddress) froms[0]).getAddress();
-        Log.d("from", fromEmail);
 
         Address[] to = message.getRecipients(javax.mail.Message.RecipientType.TO);
         String toEmail = froms == null ? null : ((InternetAddress) to[0]).getAddress();
-        Log.d("to", toEmail);
 
         long date = message.getSentDate().getTime();
 
         String content = message.getContent().toString();
-        Log.d("content", content);
 
         if(fromEmail.equals(account)){
             ContentValues values = new ContentValues();
@@ -175,6 +156,7 @@ public class RestoreService extends Service {
             if(checkIfExists(address, content, date)) return;
             values.put("address", address);
             values.put("body", content);
+            values.put("date",date);
             getContentResolver().insert(Uri.parse("content://sms/sent"), values);
         }else{
             ContentValues values = new ContentValues();
@@ -182,6 +164,7 @@ public class RestoreService extends Service {
             if(checkIfExists(address, content, date)) return;
             values.put("address", address);
             values.put("body", content);
+            values.put("date",date);
             getContentResolver().insert(Uri.parse("content://sms/inbox"), values);
         }
 
@@ -194,14 +177,19 @@ public class RestoreService extends Service {
         String[] args = new String[]{String.valueOf(time), address, body};
         Cursor c = resolver.query(uri, projection, query, args, null);
         if (c != null) {
-            if(c.getCount() == 1) return true;
+            if(c.getCount() > 0){
+                c.close();
+                return true;
+            }
+            c.close();
         }
         return false;
     }
 
     private int handleRestore() throws IOException, MessagingException {
 
-        labelIDs = new String[]{createLabelIfNotExistAndGetLabelID(mService, user, labelName)};
+        String user = "me";
+        String[] labelIDs = new String[]{createLabelIfNotExistAndGetLabelID(mService, user, labelName)};
 
         RUNNING = true;
         updateProgress(0, 0, RESTORE_STARTING);
@@ -209,7 +197,6 @@ public class RestoreService extends Service {
         List<Message> messages = getMessagesMatchingQuery(mService, user, labelIDs);
 
         String amountS = settings.getString("restore_limit", "all");
-        Log.d("amounts", amountS);
         int amount;
         try{
             amount = Integer.parseInt(amountS);
@@ -217,14 +204,13 @@ public class RestoreService extends Service {
             amount = messages.size();
         }
         if(amount > messages.size()) amount = messages.size();
-        Log.d("amount", "" + amount);
 
         for(int i = 0; i < amount; i++){
             if (!RUNNING) {
                 return BACKUP_IDLE;
             }
 
-            MimeMessage mimeMessage = getMimeMessage(mService,user, messages.get(i).getId());
+            MimeMessage mimeMessage = getMimeMessage(mService, user, messages.get(i).getId());
             handleMimeMessage(mimeMessage, i, amount);
         }
 
@@ -264,6 +250,7 @@ public class RestoreService extends Service {
         mNotifyBuilder.setContentText(text);
         // Because the ID remains unchanged, the existing notification is
         // updated.
+        int notifyID = 1;
         mNotificationManager.notify(
                 notifyID,
                 mNotifyBuilder.build());
@@ -277,7 +264,6 @@ public class RestoreService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d("service", "service");
         performOnBackgroundThread(new Runnable() {
             @Override
             public void run() {

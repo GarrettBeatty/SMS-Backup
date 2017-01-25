@@ -8,6 +8,8 @@ public interface MainView {
 
     void updateProgressInfo(String status);
 
+    void revertToOldDefaultSMS(String message, String title, String posBut);
+
     void enableBackupButton(boolean enabled);
 
     void createToast(String text);
@@ -28,5 +30,4 @@ public interface MainView {
 
     void enableRestoreButton(boolean b);
 
-    void revertToOldDefaultSMS();
 }

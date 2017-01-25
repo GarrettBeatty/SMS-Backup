@@ -93,8 +93,8 @@ public class MainPresenter {
         view.enableBackupButton(enabled);
     }
 
-    private void revertToOldDefaultSMS(){
-        view.revertToOldDefaultSMS();
+    private void revertToOldDefaultSMS(String message, String title, String pos){
+        view.revertToOldDefaultSMS(message,title,pos);
     }
 
     public void backup(GoogleAccountCredential mCredential) {
@@ -186,7 +186,7 @@ public class MainPresenter {
             updateRestoreButtonText("Restore");
             updateProgressBar(0);
             updateProgressInfo("Restore complete");
-            revertToOldDefaultSMS();
+            revertToOldDefaultSMS("You can set the original default SMS app now.", "Alert!", "OK");
         } else if (status == RESTORE_STARTING) {
             updateProgressInfo("Restore starting...");
         } else if (status == RESTORE_STOPPING) {

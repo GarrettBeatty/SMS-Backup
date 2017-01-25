@@ -15,7 +15,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Telephony;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -189,7 +188,6 @@ public class MainActivity extends BaseActivity implements MainView {
     public void startRestoreService() {
         Intent serviceIntent = new Intent(getApplicationContext(), RestoreService.class);
         startService(serviceIntent);
-        Log.d("fjdafasd", "Fdasfas");
     }
 
     @Override
@@ -213,12 +211,12 @@ public class MainActivity extends BaseActivity implements MainView {
     }
 
     @Override
-    public void revertToOldDefaultSMS() {
+    public void revertToOldDefaultSMS(String message, String title, String posBut) {
         AlertDialog.Builder  builder = new AlertDialog.Builder(this);
-        builder.setMessage("You can chnage back to the old default SMS now")
+        builder.setMessage(message)
                 .setCancelable(false)
-                .setTitle("Alert!")
-                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                .setTitle(title)
+                .setPositiveButton(posBut, new DialogInterface.OnClickListener() {
                     @TargetApi(19)
                     public void onClick(DialogInterface dialog, int id) {
 

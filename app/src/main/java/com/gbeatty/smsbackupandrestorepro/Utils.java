@@ -1,8 +1,6 @@
 package com.gbeatty.smsbackupandrestorepro;
 
 
-import android.content.Context;
-
 import com.google.api.client.util.Base64;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
@@ -16,7 +14,6 @@ import com.google.api.services.gmail.model.Thread;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,8 +25,6 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-
-import static android.os.Build.VERSION_CODES.M;
 
 public class Utils {
 
