@@ -56,23 +56,20 @@ public class BackupService extends Service {
     private Uri uri = Uri.parse("content://sms/");
     private String[] projection = {"address", "read", "body", "date", "type"
     };
-    private GoogleAccountCredential credential;
     private com.google.api.services.gmail.Gmail mService = null;
     private SharedPreferences settings;
-    private HttpTransport transport;
-    private JsonFactory jsonFactory;
     private String account;
     private String labelName;
     private LocalBroadcastManager broadcaster;
-    private String user = "me";
+    private final String user = "me";
     private Map<String, String> contacts;
     private Long tempLastDate = Long.MIN_VALUE;
     private NotificationManager mNotificationManager = null;
     private NotificationCompat.Builder mNotifyBuilder = null;
-    private int notifyID = 1;
+    private final int notifyID = 1;
     private String[] labelIDs;
 
-    public static java.lang.Thread performOnBackgroundThread(final Runnable runnable) {
+    private static java.lang.Thread performOnBackgroundThread(final Runnable runnable) {
         final java.lang.Thread t = new java.lang.Thread() {
             @Override
             public void run() {
@@ -92,7 +89,7 @@ public class BackupService extends Service {
         super.onCreate();
 
         // Initialize credentials and service object.
-        credential = GoogleAccountCredential.usingOAuth2(
+        GoogleAccountCredential credential = GoogleAccountCredential.usingOAuth2(
                 getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());
 
@@ -106,8 +103,8 @@ public class BackupService extends Service {
         labelName = settings.getString("gmail_label", "sms");
 
 
-        transport = AndroidHttp.newCompatibleTransport();
-        jsonFactory = JacksonFactory.getDefaultInstance();
+        HttpTransport transport = AndroidHttp.newCompatibleTransport();
+        JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
         mService = new com.google.api.services.gmail.Gmail.Builder(
                 transport, jsonFactory, credential)
                 .setApplicationName("SMS Backup and Restore Pro")
@@ -276,7 +273,7 @@ public class BackupService extends Service {
         stopSelf();
     }
 
-    public void updateNotification(String text) {
+    private void updateNotification(String text) {
 
         if (mNotificationManager == null || mNotifyBuilder == null) {
 

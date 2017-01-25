@@ -42,7 +42,6 @@ public class Utils {
     public static final String RESTORE_RESULT = "com.gbeatty.smsbackupandrestorepro.BackupService.RESTORE_PROCESSED";
     public static final String RESTORE_MESSAGE = "com.gbeatty.smsbackupandrestorepro.BackupService.RESTORE_MSG";
     static final int REQUEST_ACCOUNT_PICKER = 1000;
-    static final int REQUEST_AUTHORIZATION = 1001;
     static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
     static final int REQUEST_PERMISSION_MULTIPLE = 1004;
     static final int DEFAULT_SMS_REQUEST = 1005;
@@ -82,10 +81,6 @@ public class Utils {
             } else {
                 break;
             }
-        }
-
-        for (Message message : messages) {
-            System.out.println(message.toPrettyString());
         }
 
         return messages;
@@ -143,7 +138,7 @@ public class Utils {
      * @throws MessagingException
      * @throws IOException
      */
-    public static Message insertMessage(Gmail service, String userId, MimeMessage email, String thread, String... labels)
+    public static void insertMessage(Gmail service, String userId, MimeMessage email, String thread, String... labels)
             throws MessagingException, IOException {
 
         Message message = createMessageWithEmail(email);
@@ -159,10 +154,6 @@ public class Utils {
 
         message = service.users().messages().insert(userId, message).execute();
 
-        System.out.println("Message id: " + message.getId());
-        System.out.println(message.toPrettyString());
-
-        return message;
     }
 
 
@@ -206,7 +197,7 @@ public class Utils {
      * @throws IOException
      * @throws MessagingException
      */
-    public static Message createMessageWithEmail(MimeMessage emailContent)
+    private static Message createMessageWithEmail(MimeMessage emailContent)
             throws MessagingException, IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         emailContent.writeTo(buffer);

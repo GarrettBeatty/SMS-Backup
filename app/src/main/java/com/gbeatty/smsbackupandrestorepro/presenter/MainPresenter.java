@@ -2,7 +2,6 @@ package com.gbeatty.smsbackupandrestorepro.presenter;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 import com.gbeatty.smsbackupandrestorepro.BackupService;
 import com.gbeatty.smsbackupandrestorepro.RestoreService;
@@ -124,7 +123,6 @@ public class MainPresenter {
         }else{
             dateString = "Not Backed up yet.";
         }
-        Log.d("Date String", dateString);
         view.updateLastComplete(dateString);
     }
 
@@ -132,11 +130,11 @@ public class MainPresenter {
         view.createToast(text);
     }
 
-    public void loginGoogle() {
+    private void loginGoogle() {
         view.loginGoogle(false);
     }
 
-    public void startBackupService() {
+    private void startBackupService() {
         createToast("Backup starting...");
         String i = settings.getString("backup_interval", "1");
         Long interval = Long.valueOf(i) * 3600000;
@@ -167,7 +165,6 @@ public class MainPresenter {
     }
 
     public void handleRestoreReceiver(Intent intent) {
-        Log.d("TEST", "test");
         int[] message = intent.getIntArrayExtra(RESTORE_MESSAGE);
         int count = message[0];
         int total = message[1];

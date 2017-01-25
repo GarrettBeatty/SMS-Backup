@@ -33,7 +33,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:background="@color/primary"
-        android:text="Backup"
+        android:text="@string/backup"
         android:textColor="#FFFFFF" />
 
     <Button
@@ -60,7 +60,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:gravity="center_horizontal"
-        android:text="Last backup: Jan 14, 15:30"
+        android:text="@string/last_backup"
         android:textSize="12sp"
         android:textStyle="normal" />
 

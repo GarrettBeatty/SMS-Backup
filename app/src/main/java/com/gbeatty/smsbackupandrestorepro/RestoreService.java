@@ -62,7 +62,7 @@ public class RestoreService extends Service {
     private NotificationManager mNotificationManager = null;
     private NotificationCompat.Builder mNotifyBuilder = null;
 
-    public static java.lang.Thread performOnBackgroundThread(final Runnable runnable) {
+    private static java.lang.Thread performOnBackgroundThread(final Runnable runnable) {
         final java.lang.Thread t = new java.lang.Thread() {
             @Override
             public void run() {
@@ -232,7 +232,7 @@ public class RestoreService extends Service {
         stopSelf();
     }
 
-    public void updateNotification(String text) {
+    private void updateNotification(String text) {
 
         if (mNotificationManager == null || mNotifyBuilder == null) {
 

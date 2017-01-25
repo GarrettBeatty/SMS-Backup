@@ -73,7 +73,7 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
     }
 
 
-    public void chooseAccount(boolean settings) {
+    private void chooseAccount(boolean settings) {
         if (EasyPermissions.hasPermissions(this, Manifest.permission.GET_ACCOUNTS, Manifest.permission.READ_SMS, Manifest.permission.READ_CONTACTS, Manifest.permission.RECEIVE_BOOT_COMPLETED)) {
             // Start a dialog from which the user can choose an account
             String accountName = PreferenceManager.getDefaultSharedPreferences(this)
@@ -162,7 +162,7 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
      * @param connectionStatusCode code describing the presence (or lack of)
      *                             Google Play Services on this device.
      */
-    void showGooglePlayServicesAvailabilityErrorDialog(
+    private void showGooglePlayServicesAvailabilityErrorDialog(
             final int connectionStatusCode) {
         GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
         Dialog dialog = apiAvailability.getErrorDialog(
@@ -190,7 +190,6 @@ public abstract class BaseActivity extends AppCompatActivity implements EasyPerm
         switch (requestCode) {
             case REQUEST_GOOGLE_PLAY_SERVICES:
                 if (resultCode != RESULT_OK) {
-                    //TODO Handle
                 } else {
                     loginGoogle(false);
                 }

@@ -27,7 +27,7 @@ interface OnCompleteListener {
 @SuppressLint("NewApi")
 public class PreferenceActivity extends BaseActivity implements OnCompleteListener {
 
-    SettingsFragment settingsFragment;
+    private SettingsFragment settingsFragment;
 
     @Override
     public void onComplete() {
