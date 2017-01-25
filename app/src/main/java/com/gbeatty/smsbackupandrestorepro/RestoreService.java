@@ -26,6 +26,7 @@ import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.gmail.model.Message;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 
@@ -52,8 +53,7 @@ public class RestoreService extends Service {
     public static boolean RUNNING = false;
 
     private Uri uri = Uri.parse("content://sms/");
-    private String[] projection = {"address", "read", "body", "date", "type"
-    };
+    private String[] projection = {"address", "body", "date"};
     private com.google.api.services.gmail.Gmail mService = null;
     private SharedPreferences settings;
     private String account;
@@ -150,10 +150,15 @@ public class RestoreService extends Service {
 
         String content = message.getContent().toString();
 
+        if(fromEmail == null) return;
+
         if(fromEmail.equals(account)){
             ContentValues values = new ContentValues();
             String address = toEmail.split("@")[0];
-            if(checkIfExists(address, content, date)) return;
+            if(checkIfExists(address, content, date)){
+               updateProgress(count, total, RESTORE_RUNNING);
+                return;
+            }
             values.put("address", address);
             values.put("body", content);
             values.put("date",date);
@@ -161,7 +166,10 @@ public class RestoreService extends Service {
         }else{
             ContentValues values = new ContentValues();
             String address = fromEmail.split("@")[0];
-            if(checkIfExists(address, content, date)) return;
+            if(checkIfExists(address, content, date)){
+                updateProgress(count, total, RESTORE_RUNNING);
+                return;
+            }
             values.put("address", address);
             values.put("body", content);
             values.put("date",date);
@@ -173,8 +181,9 @@ public class RestoreService extends Service {
 
     private boolean checkIfExists(String address, String body, long time){
         ContentResolver resolver = getContentResolver();
-        String query = "date = ? AND address = ? AND body = ?";
-        String[] args = new String[]{String.valueOf(time), address, body};
+        String query = "address = ? AND body = ? AND CAST(date as BIGINT) = ?";
+        BigInteger date = BigInteger.valueOf(time);
+        String[] args = new String[]{address, body, String.valueOf(date)};
         Cursor c = resolver.query(uri, projection, query, args, null);
         if (c != null) {
             if(c.getCount() > 0){

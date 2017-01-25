@@ -44,7 +44,6 @@ public class MainActivity extends BaseActivity implements MainView {
     private BroadcastReceiver backupReceiver;
     private BroadcastReceiver restoreReceiver;
     private MainPresenter presenter;
-    private Intent intent;
     private PendingIntent pintent;
     private AlarmManager alarm;
     private SharedPreferences settings;
@@ -71,7 +70,7 @@ public class MainActivity extends BaseActivity implements MainView {
             }
         };
 
-        intent = new Intent(this, BackupService.class);
+        Intent intent = new Intent(this, BackupService.class);
         pintent = PendingIntent.getService(this, 0, intent, 0);
         alarm = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
@@ -226,7 +225,7 @@ public class MainActivity extends BaseActivity implements MainView {
                         intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME,
                                 "defaultSmsApp");
 
-                        startActivityForResult(intent, DEFAULT_SMS_REQUEST);
+                        startActivity(intent);
                     }
                 });
         builder.show();
