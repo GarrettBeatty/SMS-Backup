@@ -93,7 +93,7 @@ public class RestoreService extends Service {
             credential.setSelectedAccountName(account);
         }
 
-        labelName = settings.getString("gmail_label", "sms");
+        labelName = settings.getString("gmail_label", "smspro");
 
         HttpTransport transport = AndroidHttp.newCompatibleTransport();
         JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();

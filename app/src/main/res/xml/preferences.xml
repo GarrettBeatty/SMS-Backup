@@ -18,7 +18,7 @@
             android:title="Backup Interval" />
 
         <com.afollestad.materialdialogs.prefs.MaterialEditTextPreference
-            android:defaultValue="sms"
+            android:defaultValue="smspro"
             android:dialogTitle="Gmail Label"
             android:inputType="textPersonName"
             android:key="gmail_label"

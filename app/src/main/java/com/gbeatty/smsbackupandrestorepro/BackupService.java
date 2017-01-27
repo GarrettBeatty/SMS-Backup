@@ -15,6 +15,7 @@ import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
@@ -100,8 +101,7 @@ public class BackupService extends Service {
             credential.setSelectedAccountName(account);
         }
 
-        labelName = settings.getString("gmail_label", "sms");
-
+        labelName = settings.getString("gmail_label", "smspro");
 
         HttpTransport transport = AndroidHttp.newCompatibleTransport();
         JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
@@ -113,6 +113,7 @@ public class BackupService extends Service {
         broadcaster = LocalBroadcastManager.getInstance(this);
         contacts = new HashMap<>(200);
         getContactName();
+        tempLastDate = settings.getLong("last_date", Long.MIN_VALUE);
     }
 
     @Nullable
@@ -206,14 +207,15 @@ public class BackupService extends Service {
         BigInteger lastDate = BigInteger.valueOf(tempLastDate);
 
         ContentResolver resolver = getContentResolver();
-        String query = "CAST(date as BIGINT) > ?";
-        String[] args = new String[]{String.valueOf(lastDate)};
-        Cursor c = resolver.query(uri, projection, query, args, "date ASC");
+        String query = "CAST(date as BIGINT) > " + lastDate;
+//        String[] args = new String[]{String.valueOf(lastDate)};
+        Cursor c = resolver.query(uri, projection, query, null, "date ASC");
 
         if (c != null && c.getCount() > 0) {
             c.moveToFirst();
             int totalSMS = c.getCount();
             int count = 0;
+            Log.d("total count", "" + totalSMS);
             for (int i = 0; i < totalSMS; i++) {
 
                 if (!RUNNING) {
