@@ -2,9 +2,9 @@
 
 Automatically **backup** and **restore** your **SMS**  to Gmail with **SMS Backup and Restore Pro**!  
 
-![](screenshot1.png)
-![](screenshot2.png)
-![](screenshot3.png)
+![](screenshot1.png =250x)
+![](screenshot2.png =250x)
+![](screenshot3.png =250x)
 
 
 **Features**  
